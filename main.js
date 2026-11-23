@@ -4085,12 +4085,13 @@ class TemplatePicker extends FuzzySuggestModal {
 
 /** Obsidian's interface language → 'zh' or 'en' for the syntax reference. */
 function uiLanguage() {
+  let l = '';
   try {
-    const l = window.localStorage.getItem('language') || '';
-    return l.toLowerCase().startsWith('zh') ? 'zh' : 'en';
-  } catch (e) {
-    return 'en';
-  }
+    const obs = require('obsidian');
+    if (typeof obs.getLanguage === 'function') l = obs.getLanguage();   // Obsidian 1.8.7+
+    else if (obs.moment) l = obs.moment.locale();                       // older: moment follows the UI language
+  } catch (e) { /* fall back to English */ }
+  return String(l || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
 }
 
 /** Append text with `code` spans to el. */

@@ -1,0 +1,54 @@
+figure cols=3 align=top
+panel (a) partition
+array A
+  2 8 7 1 3 5 6 4
+  shade: 1..3 lightblue
+  shade: 4..6 tan
+  ptr: p=1 i=3 j=6 r=8
+  span: 1..3 {\le x} below
+panel (b) red-black tree
+tree
+  26 black
+    17 red
+      14 black
+      21 black
+    41 black
+      30 red
+      47 black
+panel (c) shortest paths
+graph
+  s (0,0) "0" gray below=s
+  t (1,1) "8" above=t
+  x (2.2,1) "9" above=x
+  y (1,-1) "5" gray below=y
+  z (2.2,-1) "7" below=z
+  s -> t 10
+  s -> y 5 thick
+  t -> x 1
+  y -> t 3 thick
+  y -> x 9
+  y -> z 2 thick
+  z -> x 6
+panel (d) LCS table
+table c start=0
+  cols: _ j 0 1 2 3
+  rows: i 0 1 2
+  _ y_j B D C
+  0 0 0 0 0
+  0 {\uparrow\,0} {\nwarrow\,1} {\leftarrow\,1}
+  shade: (2,4)
+panel (e) hashing with chaining
+chains T
+  0:
+  1: k1 k4
+  2:
+  3: k5 k2 k7
+panel (f) AVL tree
+tree
+  6 right=0
+    2 right=0
+      1
+      3
+    9 right=+1
+      _
+      10

@@ -1,0 +1,10 @@
+{
+  "id": "figure-suite",
+  "name": "Figure Suite",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.7",
+  "description": "Draw textbook-style figures of arrays, tables, trees, graphs and linked lists from a short text description, and insert them into notes as editable PNG or SVG.",
+  "author": "xiao-la",
+  "authorUrl": "https://github.com/Xiao-La",
+  "isDesktopOnly": true
+}

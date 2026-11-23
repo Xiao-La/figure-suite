@@ -277,7 +277,8 @@ function layeredLayout(ids, edges, rankGroups, dir) {
   const gapX = 1.25;
   const gapY = 1.3;
   ids.forEach((id, u) => {
-    out.set(id, dir === 'right' ? [rank[u] * gapY * 1.15, -X[u] * gapX] : [X[u] * gapX, -rank[u] * gapY]);
+    const r = rank[u] * gapY;
+    out.set(id, dir === 'right' ? [r * 1.15, -X[u] * gapX] : dir === 'left' ? [-r * 1.15, -X[u] * gapX] : dir === 'up' ? [X[u] * gapX, r] : [X[u] * gapX, -r]);
   });
   return out;
 }
@@ -350,7 +351,7 @@ function layoutGraph(block, ctx, errors) {
   else if (layout === 'circle') auto = circleLayout(ids);
   else if (layout === 'grid') auto = gridLayout(ids, num(o.cols, 0));
   else if (layout === 'line' || layout === 'row') auto = lineLayout(ids);
-  else if (layout === 'layered' || layout === 'tree' || layout === 'dag') auto = layeredLayout(ids, g.edges, rankGroups, o.dir === 'right' ? 'right' : 'down');
+  else if (layout === 'layered' || layout === 'tree' || layout === 'dag') auto = layeredLayout(ids, g.edges, rankGroups, ['right', 'left', 'up'].includes(o.dir) ? o.dir : 'down');
   else if (layout === 'force' || layout === 'spring') auto = forceLayout(ids, g.edges);
   else if (layout !== 'manual') auto = forceLayout(ids, g.edges); // unknown name: already warned by the header check
   const scale = num(o.spread, 1);

@@ -44,7 +44,7 @@ const OPT_VALUES = {
   'tree.shape': ['circle', 'box', 'ellipse', 'none', 'point', 'tri', 'triangle'],
   'tree.arrows': ['up', 'down', 'none'],
   'graph.layout': ['auto', 'manual', 'layered', 'tree', 'dag', 'force', 'spring', 'circle', 'line', 'row', 'grid'],
-  'graph.dir': ['down', 'right'],
+  'graph.dir': ['down', 'right', 'up', 'left'],
   'graph.shape': ['circle', 'box', 'ellipse', 'none', 'point', 'double'],
   'arrow.dir': ['right', 'left', 'up', 'down'],
   'panel.dir': ['row', 'col'],

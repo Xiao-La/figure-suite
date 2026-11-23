@@ -79,7 +79,7 @@ class SVG {
       } else if (it.k === 'p') {
         const tr = `translate(${r4(it.x)} ${r4(it.y)})${it.s !== 1 ? ` scale(${r4(it.s)})` : ''}`;
         const sw = it.dots ? 0.11 : it.sw;
-        out.push(`<path d="${it.d}" transform="${tr}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`);
+        out.push(`<path d="${it.d}" transform="${tr}" fill="${it.fill ? color : 'none'}" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`);
       } else if (it.k === 'l') {
         out.push(`<line x1="${r4(it.x)}" y1="${r4(it.y)}" x2="${r4(it.x2)}" y2="${r4(it.y2)}" stroke="${color}" stroke-width="${r4(it.sw)}"/>`);
       } else if (it.k === 't') {

@@ -177,6 +177,23 @@ check('colors are not typos', !msgs('tree\n  1 red\n    2 #abc thick').length);
   }
 }
 
+// theory-CS additions: symbols, accents, blackboard/calligraphic letters, bottom-up layers
+{
+  const syms = '\\vdash \\models \\top \\bot \\supseteq \\sqsubseteq \\prec \\preceq \\ll \\gg \\oplus \\otimes \\odot \\sqcup \\sqcap \\uplus \\setminus \\bullet \\lhd \\rhd \\Box \\Diamond \\blacksquare \\hookrightarrow \\leadsto \\Leftarrow \\Uparrow \\Downarrow \\triangleq \\coloneqq \\propto \\nmid';
+  const r = R(`array\n  "${syms}"`);
+  check('theory symbols are known', !r.errors.length, r.errors.map((e) => e.msg).join('; '));
+  const acc = R('array\n  \\hat{x} \\tilde{y} \\vec{v} \\dot{x} \\ddot{q} "\\overrightarrow{AB}" "\\widehat{xyz}" \\mathbb{N} "\\mathcal{O}(n)"');
+  check('accents and letter styles render cleanly', !acc.errors.length && !acc.empty, acc.errors.map((e) => e.msg).join('; '));
+  const b = api.typeset('\\mathbb{R}');
+  check('\\mathbb maps to double-struck', b.items.some((it) => it.k === 't' && it.text === 'ℝ'));
+  const up = R('graph layout=layered dir=up\n  a -> b').hits;
+  check('dir=up puts sources at the bottom', up[0].y > up[1].y, JSON.stringify(up.map((h) => h.y)));
+  const left = R('graph layout=layered dir=left\n  a -> b').hits;
+  check('dir=left puts sources on the right', left[0].x > left[1].x, JSON.stringify(left.map((h) => h.x)));
+  const theory = R(require('fs').readFileSync(require('path').join(__dirname, '..', 'docs', 'theory.fig'), 'utf8'));
+  check('theory showcase renders cleanly', !theory.errors.length, theory.errors.map((e) => `${e.line}: ${e.msg}`).join('; '));
+}
+
 // every example in the syntax reference renders cleanly, and both languages are filled in
 for (const sec of api.help) {
   check(`help ${sec.id} has both languages`, sec.title.en && sec.title.zh && sec.items.every((it) => (it.p ? it.p.en && it.p.zh : it.ref ? it.ref.every(([, d]) => d.en && d.zh) : it.note ? it.note.en && it.note.zh : true)));

@@ -28,8 +28,10 @@ const arrowPath = (x1, y1, x2, y2, head = 0.17) => {
   return `M${r(x1)} ${r(y1)}L${r(x2)} ${r(y2)}M${r(h1[0])} ${r(h1[1])}L${r(x2)} ${r(y2)}L${r(h2[0])} ${r(h2[1])}`;
 };
 const A = AXIS;
+const CIRC = `M0.389 ${A - 0.27}A0.27 0.27 0 1 0 0.389 ${A + 0.27}A0.27 0.27 0 1 0 0.389 ${A - 0.27}Z`;
 const SYMBOLS = {
   '−': { w: 0.778, d: `M0.083 ${A}H0.694`, ink: [A - 0.02, A + 0.02] },
+  '+': { w: 0.778, d: `M0.083 ${A}H0.694M0.389 ${A - 0.31}V${A + 0.31}`, ink: [A - 0.31, A + 0.31] },
   '×': { w: 0.778, d: `M0.22 ${A - 0.17}L0.56 ${A + 0.17}M0.22 ${A + 0.17}L0.56 ${A - 0.17}`, ink: [A - 0.18, A + 0.18] },
   '≤': { w: 0.778, d: `M0.67 -0.58L0.11 -0.35L0.67 -0.12M0.11 0.03H0.67`, ink: [-0.6, 0.05] },
   '≥': { w: 0.778, d: `M0.11 -0.58L0.67 -0.35L0.11 -0.12M0.11 0.03H0.67`, ink: [-0.6, 0.05] },
@@ -79,6 +81,43 @@ const SYMBOLS = {
   '⋮': { w: 0.3, d: 'M0.15 -0.72h0.001M0.15 -0.4h0.001M0.15 -0.08h0.001', ink: [-0.77, -0.03], dots: true },
   '⋱': { w: 1.0, d: 'M0.2 -0.68h0.001M0.5 -0.38h0.001M0.8 -0.08h0.001', ink: [-0.73, -0.03], dots: true },
   '□': { w: 0.778, d: 'M0.11 -0.65H0.67V0H0.11Z', ink: [-0.65, 0] },
+  '■': { w: 0.778, d: 'M0.11 -0.65H0.67V0H0.11Z', ink: [-0.65, 0], fill: true },
+  '◇': { w: 0.778, d: `M0.389 ${A - 0.36}L0.66 ${A}L0.389 ${A + 0.36}L0.118 ${A}Z`, ink: [A - 0.37, A + 0.37] },
+  '⊃': { w: 0.778, d: `M0.083 ${A - 0.25}H0.444A0.25 0.25 0 0 1 0.444 ${A + 0.25}H0.083`, ink: [A - 0.26, A + 0.26] },
+  '⊇': { w: 0.778, d: `M0.083 ${A - 0.3}H0.444A0.22 0.22 0 0 1 0.444 ${A + 0.14}H0.083M0.083 ${A + 0.3}H0.694`, ink: [A - 0.31, A + 0.31] },
+  '⊑': { w: 0.778, d: `M0.694 ${A - 0.3}H0.11V${A + 0.14}H0.694M0.11 ${A + 0.3}H0.694`, ink: [A - 0.31, A + 0.31] },
+  '⊒': { w: 0.778, d: `M0.083 ${A - 0.3}H0.667V${A + 0.14}H0.083M0.083 ${A + 0.3}H0.667`, ink: [A - 0.31, A + 0.31] },
+  '⊢': { w: 0.611, d: `M0.11 -0.69V0M0.11 ${A}H0.5`, ink: [-0.69, 0] },
+  '⊣': { w: 0.611, d: `M0.5 -0.69V0M0.5 ${A}H0.11`, ink: [-0.69, 0] },
+  '⊨': { w: 0.778, d: `M0.11 -0.69V0M0.11 ${A - 0.09}H0.67M0.11 ${A + 0.09}H0.67`, ink: [-0.69, 0] },
+  '⊤': { w: 0.778, d: 'M0.083 -0.68H0.694M0.389 -0.68V0', ink: [-0.68, 0] },
+  '≺': { w: 0.778, d: `M0.67 ${A - 0.29}C0.6 ${A - 0.1} 0.35 ${A} 0.11 ${A}C0.35 ${A} 0.6 ${A + 0.1} 0.67 ${A + 0.29}`, ink: [A - 0.28, A + 0.28] },
+  '≻': { w: 0.778, d: `M0.11 ${A - 0.29}C0.18 ${A - 0.1} 0.43 ${A} 0.67 ${A}C0.43 ${A} 0.18 ${A + 0.1} 0.11 ${A + 0.29}`, ink: [A - 0.28, A + 0.28] },
+  '⪯': { w: 0.778, d: `M0.67 ${A - 0.38}C0.6 ${A - 0.22} 0.35 ${A - 0.13} 0.11 ${A - 0.13}C0.35 ${A - 0.13} 0.6 ${A - 0.04} 0.67 ${A + 0.12}M0.11 ${A + 0.3}H0.67`, ink: [A - 0.37, A + 0.31] },
+  '⪰': { w: 0.778, d: `M0.11 ${A - 0.38}C0.18 ${A - 0.22} 0.43 ${A - 0.13} 0.67 ${A - 0.13}C0.43 ${A - 0.13} 0.18 ${A - 0.04} 0.11 ${A + 0.12}M0.11 ${A + 0.3}H0.67`, ink: [A - 0.37, A + 0.31] },
+  '≪': { w: 1.0, d: `M0.55 ${A - 0.23}L0.13 ${A}L0.55 ${A + 0.23}M0.87 ${A - 0.23}L0.45 ${A}L0.87 ${A + 0.23}`, ink: [A - 0.24, A + 0.24] },
+  '≫': { w: 1.0, d: `M0.13 ${A - 0.23}L0.55 ${A}L0.13 ${A + 0.23}M0.45 ${A - 0.23}L0.87 ${A}L0.45 ${A + 0.23}`, ink: [A - 0.24, A + 0.24] },
+  '∝': { w: 0.778, d: `M0.69 ${A - 0.14}C0.48 ${A - 0.14} 0.4 ${A + 0.14} 0.24 ${A + 0.14}C0.1 ${A + 0.14} 0.1 ${A - 0.14} 0.24 ${A - 0.14}C0.4 ${A - 0.14} 0.48 ${A + 0.14} 0.69 ${A + 0.14}`, ink: [A - 0.15, A + 0.15] },
+  '≜': { w: 0.778, d: `M0.083 ${A - 0.03}H0.694M0.083 ${A + 0.15}H0.694M0.27 ${A - 0.17}L0.389 ${A - 0.42}L0.508 ${A - 0.17}Z`, ink: [A - 0.43, A + 0.16] },
+  '≔': { w: 0.944, d: `M0.25 ${A - 0.09}H0.861M0.25 ${A + 0.09}H0.861`, dots: `M0.1 ${A - 0.1}h0.001M0.1 ${A + 0.1}h0.001`, ink: [A - 0.15, A + 0.15] },
+  '∤': { w: 0.278, d: 'M0.139 -0.75V0.25M0.03 -0.12L0.25 -0.38', ink: [-0.75, 0.25] },
+  '↪': { w: 1.0, d: `M0.18 ${A - 0.2}A0.1 0.1 0 0 0 0.18 ${A}${arrowPath(0.18, A, 0.917, A)}`, ink: [A - 0.21, A + 0.12] },
+  '⇝': { w: 1.0, d: `M0.083 ${A}c0.06 -0.1 0.12 -0.1 0.18 0s0.12 0.1 0.18 0s0.12 -0.1 0.18 0s0.12 0.1 0.18 0H0.917M0.72 ${A - 0.13}L0.917 ${A}L0.72 ${A + 0.13}`, ink: [A - 0.13, A + 0.13] },
+  '⇐': { w: 1.0, d: `M0.917 ${A - 0.09}H0.18M0.917 ${A + 0.09}H0.18M0.28 ${A - 0.23}L0.083 ${A}L0.28 ${A + 0.23}`, ink: [A - 0.24, A + 0.24] },
+  '⇑': { w: 0.6, d: 'M0.21 0.19V-0.52M0.39 0.19V-0.52M0.07 -0.45L0.3 -0.69L0.53 -0.45', ink: [-0.7, 0.2] },
+  '⇓': { w: 0.6, d: 'M0.21 -0.69V0.02M0.39 -0.69V0.02M0.07 -0.05L0.3 0.19L0.53 -0.05', ink: [-0.7, 0.2] },
+  '⟹': { w: 1.5, d: `M0.083 ${A - 0.09}H1.32M0.083 ${A + 0.09}H1.32M1.22 ${A - 0.23}L1.417 ${A}L1.22 ${A + 0.23}`, ink: [A - 0.24, A + 0.24] },
+  '⟶': { w: 1.5, d: arrowPath(0.083, A, 1.417, A), ink: [A - 0.12, A + 0.12] },
+  '⊕': { w: 0.778, d: `${CIRC}M0.119 ${A}H0.659M0.389 ${A - 0.27}V${A + 0.27}`, ink: [A - 0.28, A + 0.28] },
+  '⊗': { w: 0.778, d: `${CIRC}M0.198 ${A - 0.191}L0.58 ${A + 0.191}M0.198 ${A + 0.191}L0.58 ${A - 0.191}`, ink: [A - 0.28, A + 0.28] },
+  '⊙': { w: 0.778, d: CIRC, dots: `M0.389 ${A}h0.001`, ink: [A - 0.28, A + 0.28] },
+  '⊔': { w: 0.667, d: 'M0.111 -0.6V0H0.555V-0.6', ink: [-0.6, 0] },
+  '⊓': { w: 0.667, d: 'M0.111 0V-0.6H0.555V0', ink: [-0.6, 0] },
+  '⊎': { w: 0.667, d: 'M0.111 -0.65V-0.25A0.222 0.222 0 0 0 0.555 -0.25V-0.65M0.333 -0.47V-0.17M0.183 -0.32H0.483', ink: [-0.65, 0] },
+  '∖': { w: 0.5, d: 'M0.08 -0.75L0.42 0.25', ink: [-0.75, 0.25] },
+  '∙': { w: 0.5, d: `M0.25 ${A - 0.09}A0.09 0.09 0 1 0 0.25 ${A + 0.09}A0.09 0.09 0 1 0 0.25 ${A - 0.09}Z`, ink: [A - 0.1, A + 0.1], fill: true },
+  '◁': { w: 0.778, d: `M0.65 ${A - 0.3}L0.13 ${A}L0.65 ${A + 0.3}Z`, ink: [A - 0.31, A + 0.31] },
+  '▷': { w: 0.778, d: `M0.13 ${A - 0.3}L0.65 ${A}L0.13 ${A + 0.3}Z`, ink: [A - 0.31, A + 0.31] },
 };
 
 const COMMANDS = {
@@ -95,11 +134,39 @@ const COMMANDS = {
   nabla: '∇', sum: '∑', prod: '∏', perp: '⊥', mid: '∣', parallel: '∥', cdots: '⋯', ldots: '…', dots: '…', vdots: '⋮', ddots: '⋱',
   lbrace: '{', rbrace: '}', backslash: '\\', '{': '{', '}': '}', '%': '%', '#': '#', '&': '&', $: '$', _: '_', square: '□', star: '∗', ast: '∗',
   colon: ':', vert: '|', lvert: '|', rvert: '|', S: '§', deg: '°',
+  // logic, order, sets, operators
+  vdash: '⊢', dashv: '⊣', models: '⊨', top: '⊤', bot: '⊥', supset: '⊃', supseteq: '⊇', sqsubseteq: '⊑', sqsupseteq: '⊒',
+  prec: '≺', succ: '≻', preceq: '⪯', succeq: '⪰', ll: '≪', gg: '≫', propto: '∝', triangleq: '≜', coloneqq: '≔', defeq: '≜',
+  nmid: '∤', hookrightarrow: '↪', leadsto: '⇝', rightsquigarrow: '⇝', Leftarrow: '⇐', Uparrow: '⇑', Downarrow: '⇓',
+  Longrightarrow: '⟹', longrightarrow: '⟶', longmapsto: '↦',
+  oplus: '⊕', otimes: '⊗', odot: '⊙', sqcup: '⊔', sqcap: '⊓', uplus: '⊎', setminus: '∖', bullet: '∙',
+  triangleleft: '◁', lhd: '◁', triangleright: '▷', rhd: '▷', Box: '□', Diamond: '◇', blacksquare: '■', qed: '■',
 };
+/* Accents drawn above a body: path in em, x centred on 0, y = 0 at the accent's base. */
+const ACCENTS = {
+  hat: { d: () => 'M-0.13 0L0 -0.13L0.13 0', h: 0.13 },
+  widehat: { d: (w) => `M${-w} 0L0 -0.13L${w} 0`, h: 0.13, wide: 0.2 },
+  check: { d: () => 'M-0.13 -0.13L0 0L0.13 -0.13', h: 0.13 },
+  tilde: { d: () => 'M-0.16 -0.02C-0.1 -0.13 -0.04 -0.1 0 -0.06S0.1 0.02 0.16 -0.09', h: 0.11 },
+  widetilde: { d: (w) => `M${-w} -0.02C${-w * 0.6} -0.13 ${-w * 0.25} -0.1 0 -0.06S${w * 0.6} 0.02 ${w} -0.09`, h: 0.11, wide: 0.2 },
+  vec: { d: () => 'M-0.17 -0.06H0.17M0.09 -0.12L0.17 -0.06L0.09 0', h: 0.12 },
+  overrightarrow: { d: (w) => `M${-w} -0.06H${w}M${w - 0.08} -0.12L${w} -0.06L${w - 0.08} 0`, h: 0.12, wide: 0.17 },
+  dot: { dots: 'M0 -0.05h0.001', h: 0.1 },
+  ddot: { dots: 'M-0.09 -0.05h0.001M0.09 -0.05h0.001', h: 0.1 },
+};
+const letterMap = (special, base, lower) => (ch) => {
+  if (special[ch]) return special[ch];
+  if (/[A-Z]/.test(ch)) return String.fromCodePoint(base + ch.charCodeAt(0) - 65);
+  if (lower && /[a-z]/.test(ch)) return String.fromCodePoint(lower + ch.charCodeAt(0) - 97);
+  return null;
+};
+const DOUBLE_STRUCK = letterMap({ C: 'ℂ', H: 'ℍ', N: 'ℕ', P: 'ℙ', Q: 'ℚ', R: 'ℝ', Z: 'ℤ', 1: '𝟙' }, 0x1d538, 0x1d552);
+const SCRIPT = letterMap({ B: 'ℬ', E: 'ℰ', F: 'ℱ', H: 'ℋ', I: 'ℐ', L: 'ℒ', M: 'ℳ', R: 'ℛ' }, 0x1d49c, 0);
 const OPERATOR_NAMES = new Set(['log', 'lg', 'ln', 'min', 'max', 'exp', 'sin', 'cos', 'tan', 'mod', 'gcd', 'lim', 'det', 'deg', 'Pr', 'argmin', 'argmax', 'sup', 'inf', 'poly', 'polylog', 'rank', 'dim', 'ker']);
 const SPACES = { ',': 0.167, ':': 0.222, '>': 0.222, ';': 0.278, ' ': 0.333, quad: 1, qquad: 2, '!': -0.167, enspace: 0.5 };
-const BIN = new Set(['+', '−', '×', '·', '∪', '∩', '∧', '∨', '∘', '±', '÷', '∗']);
-const REL = new Set(['=', '<', '>', '≤', '≥', '≠', '≡', '∼', '≈', '←', '→', '↔', '⇒', '⇔', '↦', '∈', '∉', '⊂', '⊆', '∣']);
+const BIN = new Set(['+', '−', '×', '·', '∪', '∩', '∧', '∨', '∘', '±', '÷', '∗', '⊕', '⊗', '⊙', '⊔', '⊓', '⊎', '∖', '∙', '◁', '▷']);
+const REL = new Set(['=', '<', '>', '≤', '≥', '≠', '≡', '∼', '≈', '←', '→', '↔', '⇒', '⇔', '↦', '∈', '∉', '⊂', '⊆', '∣',
+  '⊃', '⊇', '⊑', '⊒', '⊢', '⊣', '⊨', '≺', '≻', '⪯', '⪰', '≪', '≫', '∝', '≜', '≔', '∤', '↪', '⇝', '⇐', '⟹', '⟶']);
 const OPEN = new Set(['(', '[', '{', '⌈', '⌊', '⟨', '|']);
 
 /* ---------------- parsing ---------------- */
@@ -115,12 +182,12 @@ const OPEN = new Set(['(', '[', '{', '⌈', '⌊', '⟨', '|']);
 const STRUCT_COMMANDS = new Set([
   'text', 'textrm', 'mathrm', 'textup', 'operatorname', 'mbox', 'textnormal', 'textit', 'mathit', 'emph',
   'textbf', 'mathbf', 'bm', 'boldsymbol', 'textsc', 'mathsc', 'frac', 'dfrac', 'tfrac', 'sqrt', 'overline', 'bar',
-  'left', 'right', 'big', 'Big', 'bigl', 'bigr',
+  'left', 'right', 'big', 'Big', 'bigl', 'bigr', 'mathbb', 'mathcal',
 ]);
 
 /** Whether `\name` means something to the label typesetter. */
 function isKnownCommand(name) {
-  return name in SPACES || name in COMMANDS || OPERATOR_NAMES.has(name) || STRUCT_COMMANDS.has(name);
+  return name in SPACES || name in COMMANDS || name in ACCENTS || OPERATOR_NAMES.has(name) || STRUCT_COMMANDS.has(name);
 }
 
 /** Alphabetic `\commands` in `text` the typesetter does not know (they would print literally). */
@@ -180,6 +247,12 @@ function parseLabel(src, mode = 'math') {
     if (name === 'frac' || name === 'dfrac' || name === 'tfrac') { const num = readArg(m, st); const den = readArg(m, st); out.push({ t: 'frac', num, den }); return; }
     if (name === 'sqrt') { out.push({ t: 'sqrt', a: readArg(m, st) }); return; }
     if (name === 'overline' || name === 'bar') { out.push({ t: 'over', a: readArg(m, st) }); return; }
+    if (name in ACCENTS) { out.push({ t: 'acc', kind: name, a: readArg(m, st) }); return; }
+    if (name === 'mathbb' || name === 'mathcal') {
+      const map = name === 'mathbb' ? DOUBLE_STRUCK : SCRIPT;
+      for (const a of readArg('text', 'r')) out.push(a.t === 'c' && map(a.ch) ? { t: 'c', ch: map(a.ch), st: 'r' } : a);
+      return;
+    }
     if (name === 'left' || name === 'right' || name === 'big' || name === 'Big' || name === 'bigl' || name === 'bigr') return;
     if (OPERATOR_NAMES.has(name)) { const g = []; textRun(g, name, 'r'); out.push({ t: 'g', a: g, op: true }); return; }
     if (name in COMMANDS) {
@@ -289,7 +362,10 @@ function charBox(ch, st) {
   // symbols drawn by stroke take priority for math operators (consistent weight)
   if (SYMBOLS[ch]) {
     const sym = SYMBOLS[ch];
-    return { w: sym.w, asc: -sym.ink[0], desc: sym.ink[1], items: [{ k: 'p', d: sym.d, x: 0, y: 0, s: 1, sw: st === 'b' ? 0.07 : 0.045, dots: !!sym.dots }] };
+    const sw = st === 'b' ? 0.07 : 0.045;
+    const items = [{ k: 'p', d: sym.d, x: 0, y: 0, s: 1, sw, dots: sym.dots === true, fill: !!sym.fill }];
+    if (typeof sym.dots === 'string') items.push({ k: 'p', d: sym.dots, x: 0, y: 0, s: 1, sw, dots: true });
+    return { w: sym.w, asc: -sym.ink[0], desc: sym.ink[1], items };
   }
   if (font) {
     let f = font;
@@ -305,8 +381,10 @@ function charBox(ch, st) {
     }
   }
   // fallback: system font text
-  const wide = /[⺀-￿]/.test(ch);
-  const w = ch === ' ' ? 0.333 : wide ? 1 : /[il.,:;'|!]/.test(ch) ? 0.28 : /[mwMW]/.test(ch) ? 0.83 : 0.55;
+  const code = ch.codePointAt(0);
+  const wide = code >= 0x2e80 && code <= 0xffff;   // CJK and other full-width text
+  const mathLetter = /[ℂℍℕℙℚℝℤℬℰℱℋℐℒℳℛ]/.test(ch) || (code >= 0x1d400 && code <= 0x1d7ff);
+  const w = ch === ' ' ? 0.333 : wide ? 1 : mathLetter ? 0.64 : /[il.,:;'|!]/.test(ch) ? 0.28 : /[mwMW]/.test(ch) ? 0.83 : 0.55;
   return { w, asc: 0.7, desc: wide ? 0.12 : 0.02, items: [{ k: 't', text: ch, x: 0, y: 0, s: 1, it: st === 'i', bold: st === 'b' }] };
 }
 
@@ -436,6 +514,20 @@ function atomBox(atom, level) {
       place(items, body, 0, 0);
       items.push({ k: 'l', x: 0.02, y, x2: body.w, y2: y, sw: 0.04 });
       return { w: body.w, asc: -y + 0.03, desc: body.desc, items };
+    }
+    case 'acc': {
+      const acc = ACCENTS[atom.kind];
+      const body = hbox(atom.a, level);
+      const y = -(Math.max(body.asc, 0.45) + 0.08);
+      // centre over the ink; italic letters lean right, so nudge the accent along
+      const italic = atom.a.length === 1 && atom.a[0].st === 'i';
+      const cx = body.w / 2 + (italic ? 0.06 : 0);
+      const hw = acc.wide ? Math.max(acc.wide, body.w / 2 - 0.02) : 0;
+      const items = [];
+      place(items, body, 0, 0);
+      if (acc.d) items.push({ k: 'p', d: acc.d(Math.round(hw * 1000) / 1000), x: cx, y, s: 1, sw: 0.04 });
+      if (acc.dots) items.push({ k: 'p', d: acc.dots, x: cx, y, s: 1, sw: 0.04, dots: true });
+      return { w: body.w, ic: body.ic, asc: -y + acc.h + 0.02, desc: body.desc, items };
     }
     default: return { w: 0, asc: 0, desc: 0, items: [] };
   }

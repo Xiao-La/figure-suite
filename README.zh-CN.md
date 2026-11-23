@@ -1,10 +1,12 @@
 # Figure Suite
 
-在弹出面板里用简短的文本画《算法导论》风格的示意图，实时预览，导出成 PNG / SVG 文件、复制到剪贴板，或直接插入当前笔记。图片里保存了源码，之后可以随时重新打开编辑。
+用几行文本画算法、数据结构和理论计算机科学里的示意图：数组和 DP 表、树、图和自动机、链表和散列表，风格向《算法导论》这类教材看齐。在弹出面板里写源码、实时预览，导出成 PNG / SVG 文件、复制到剪贴板，或直接插入当前笔记。图片里保存了源码，之后可以随时重新打开编辑。
 
 [English](README.md)
 
 ![用 Figure Suite 画的六张图：数组划分、红黑树、最短路、LCS 表、拉链散列表、AVL 树](docs/showcase.png)
+
+![用 Figure Suite 画的六张理论图：NFA、图灵机纸带、Hasse 图、语法分析树、马尔可夫链、CYK 表](docs/theory.png)
 
 ## 用法
 
@@ -22,14 +24,14 @@
 
 ## 覆盖范围
 
-按《算法导论》各章的图归成 6 类通用图元（统计见 [docs/PLAN.md](docs/PLAN.md)）：
+6 类通用图元覆盖数据结构与算法、自动机与形式语言、可计算性与复杂度、离散数学、概率等课程里的常见图（最初按《算法导论》各章统计，见 [docs/PLAN.md](docs/PLAN.md)）：
 
 | 图元 | 用来画 |
 |---|---|
-| `array` | 数组、栈/队列、插入排序/快排分区、计数排序、串匹配对齐 |
-| `table` | DP 表（LCS 箭头）、矩阵、邻接矩阵、二进制计数器、基数排序列 |
-| `tree` | BST、堆、红黑树（NIL 哨兵）、B 树、旋转（子树三角）、递归树、Huffman 树、不相交集森林、顺序统计树 |
-| `graph` | 有向/无向/带权图、BFS/DFS 状态、最短路、MST、流网络、SCC、DAG/拓扑排序、二分图、有限自动机、计算几何点集 |
+| `array` | 数组、栈/队列、插入排序/快排分区、计数排序、串匹配对齐、图灵机纸带 |
+| `table` | DP 表（LCS 箭头、CYK）、矩阵、邻接矩阵、真值表、状态转移表、二进制计数器、基数排序列 |
+| `tree` | BST、堆、红黑树（NIL 哨兵）、B 树、旋转（子树三角）、递归树、Huffman 树、不相交集森林、顺序统计树、语法分析树、博弈树、Trie |
+| `graph` | 有向/无向/带权图、BFS/DFS 状态、最短路、MST、流网络、SCC、DAG/拓扑排序、二分图、有限自动机（DFA/NFA）、马尔可夫链、Hasse 图（偏序）、归约构件、计算几何点集 |
 | `list` / `chains` | 单/双向链表；散列表拉链、邻接表、桶 |
 | `panel` / `arrow` / `text` | (a)(b)(c) 多面板、面板间带标签箭头、文字 |
 
@@ -55,10 +57,12 @@ arrow "RL"                         ← 面板之间的箭头
 ### 标签（迷你 TeX）
 
 - 默认是数学：字母斜体、数字正体，`x_1`、`n^2`、`x'`、`\alpha`…`\Omega`、`\infty \le \ge \ne \gets \to \in \cup \cdots`、`\uparrow \nwarrow \leftarrow`（LCS）、`\lceil \rfloor`、`\frac{a}{b}`、`\sqrt{n}`、`\overline{x}`、`\log \lg \min`（正体）。
+- 理论常用符号：逻辑 `\vdash \models \top \bot \neg \land \lor`，集合与序 `\subseteq \supseteq \setminus \sqsubseteq \prec \preceq \ll`，运算与箭头 `\oplus \otimes \sqcup \uplus \Rightarrow \Leftarrow \hookrightarrow \leadsto`，模态 `\Box \Diamond`，重音 `\hat{x} \tilde{x} \vec{v} \dot{x} \overrightarrow{AB}`。`\sqcup` 也可作纸带空白符。
+- `\mathbb{N}`、`\mathcal{O}` 可用，但这两类字母 Computer Modern 里没有，会用系统字体绘制。
 - `v1` 自动排成 v₁；`NIL` 排成小型大写；两个以上大写字母（`RL`）正体。
 - 含空格的标签用引号把整个标签括起来：`"c(n/2) + 1"`、`"n \log n"`（引号只是分组，内容仍是数学，空格保留）；标签中间出现的 `"..."` 是正体文字；也可以用 `\text{...}`，小型大写 `\textsc{...}`，粗体 `\textbf{...}`。`\\` 换行。
 - `text`、`arrow` 和面板标题默认是文字模式，`$...$` 里是数学。
-- 字形全部取自插件自带的 Computer Modern 字体并转成路径，预览、SVG、PNG 完全一致，与系统字体无关。
+- 字形取自插件自带的 Computer Modern 字体并转成路径，预览、SVG、PNG 完全一致，与系统字体无关（`\mathbb`、`\mathcal` 和中日韩文字除外）。
 
 颜色：`white light shade gray dark black red pink blue lightblue green lightgreen yellow orange tan purple` 或 `#hex`。上色的写法在所有块里统一：
 - 单个值写 `值@颜色`：数组格子、表格格子、链表/拉链结点、树结点（`7@black`）、图结点（`a@gray`、`a "x"@red`）都可以；
@@ -111,7 +115,7 @@ tree r=14 levelgap= sibgap= shape=circle|box|ellipse|none arrows=up|down fill= t
 ### graph
 
 ```
-graph layout=auto|manual|layered|force|circle|line|grid dir=right unit=60 r= shape= spread=1 directed|undirected
+graph layout=auto|manual|layered|force|circle|line|grid dir=right|up|left unit=60 r= shape= spread=1 directed|undirected
   s (0,0) "0" gray above=s       结点：id 坐标（y 向上）标签 颜色/形状 注释
   s -> t 10                      有向；-- 无向；<-> 双向；<- 反向；可连写 a -- b -- c
   t -> x 1 thick bend=20         bend=角度（正 = 向左弯），swap 标签换边，inline 标签压在线上

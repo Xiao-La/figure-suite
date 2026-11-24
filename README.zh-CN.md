@@ -1,6 +1,6 @@
 # Figure Suite
 
-用几行文本画算法、数据结构和理论计算机科学里的示意图：数组和 DP 表、树、图和自动机、链表和散列表，风格向《算法导论》这类教材看齐。在弹出面板里写源码、实时预览，导出成 PNG / SVG 文件、复制到剪贴板，或直接插入当前笔记。图片里保存了源码，之后可以随时重新打开编辑。
+用几行文本画算法、数据结构和理论计算机科学里的示意图：数组和 DP 表、树、图和自动机、链表和散列表、函数曲线、韦恩图、消息时序图和时间轴，风格向《算法导论》这类教材看齐。在弹出面板里写源码、实时预览，导出成 PNG / SVG 文件、复制到剪贴板，或直接插入当前笔记。图片里保存了源码，之后可以随时重新打开编辑。
 
 [English](README.md)
 
@@ -8,12 +8,14 @@
 
 ![用 Figure Suite 画的六张理论图：NFA、图灵机纸带、Hasse 图、语法分析树、马尔可夫链、CYK 表](docs/theory.png)
 
+![另外六张：函数增长、PSPACE 里的 P/NP/coNP、TCP 握手、数组指向链表、韦恩图阴影区域、区间调度](docs/more.png)
+
 ## 用法
 
 - **新建**：命令「Figure Suite: New figure」、左侧栏的形状图标，或编辑器右键「Insert figure…」。
 - 新建时面板是空的（占位文字提示从模板开始）；上次没插入就关掉的内容会作为草稿恢复，标题显示「(draft restored)」。
 - 面板左边写源码，右边实时预览；问题在下方列出（红色 = 错误，橙色 = 警告：拼错的选项/指令、越界的下标等，图照常画），点一下跳到该行。
-- 工具栏：模板（模糊搜索，30 个，覆盖下面所有类型；回车替换当前源码，可 Cmd/Ctrl+Z 撤销，Shift+回车追加为新块）、清空、语法速查、缩放（Ctrl/Cmd+滚轮也可以）、适应窗口。
+- 工具栏：模板（模糊搜索，40 个，覆盖下面所有类型；回车替换当前源码，可 Cmd/Ctrl+Z 撤销，Shift+回车追加为新块）、清空、语法速查、缩放（Ctrl/Cmd+滚轮也可以）、适应窗口。
 - **语法速查**：分章节的完整参考，顶部可以按章节跳转、按关键词搜索；每个示例都有「插入」按钮，点一下追加到源码末尾。默认跟随 Obsidian 的界面语言（中文 / English），右上角可以切换，设置里也可以固定。
 - **拖动图（graph）的结点**：坐标自动写回源码（吸附 0.1，按住 Alt 不吸附），整次拖动只算一步撤销。
 - 底部：文件名、格式（PNG/SVG）、PNG 倍率；`Copy PNG`、`Copy SVG`、`Save file`（只存附件并复制嵌入链接）、`Insert`（存到附件目录，在光标处单独一行插入 `![[x.png|宽度]]`）。没有打开的笔记编辑器时（例如阅读视图），主按钮变成 `Save & copy link`。`Cmd/Ctrl+Enter` = 主按钮。
@@ -24,7 +26,7 @@
 
 ## 覆盖范围
 
-6 类通用图元覆盖数据结构与算法、自动机与形式语言、可计算性与复杂度、离散数学、概率等课程里的常见图（最初按《算法导论》各章统计，见 [docs/PLAN.md](docs/PLAN.md)）：
+10 类通用图元覆盖数据结构与算法、自动机与形式语言、可计算性与复杂度、离散数学、概率、计算机网络、分布式系统、操作系统等课程里的常见图（最初按《算法导论》各章统计，见 [docs/PLAN.md](docs/PLAN.md)）：
 
 | 图元 | 用来画 |
 |---|---|
@@ -33,6 +35,11 @@
 | `tree` | BST、堆、红黑树（NIL 哨兵）、B 树、旋转（子树三角）、递归树、Huffman 树、不相交集森林、顺序统计树、语法分析树、博弈树、Trie |
 | `graph` | 有向/无向/带权图、BFS/DFS 状态、最短路、MST、流网络、SCC、DAG/拓扑排序、二分图、有限自动机（DFA/NFA）、马尔可夫链、Hasse 图（偏序）、归约构件、计算几何点集 |
 | `list` / `chains` | 单/双向链表；散列表拉链、邻接表、桶 |
+| `plot` | 函数增长、渐近界（标出 n₀）、摊还代价柱形图、散点 |
+| `sets` | 带阴影区域和元素的韦恩图、嵌套集合、复杂度类关系图 |
+| `seq` | 协议消息时序图（TCP、两阶段提交）、分布式时空图（Lamport 时钟） |
+| `timeline` | 区间调度、活动选择、截止时间、甘特图（CPU 调度） |
+| `link` | 从一个块的某部分指向另一个块的箭头：指针、页表、B+ 树叶子链 |
 | `panel` / `arrow` / `text` | (a)(b)(c) 多面板、面板间带标签箭头、文字 |
 
 没做的（极少用）：FFT 蝶形、排序网络、电路、矩阵链斜三角表、vEB、斐波那契堆。
@@ -142,6 +149,52 @@ chains T double start=0
   3: k5 k2 k7
 ```
 
+### plot
+
+```
+plot x=1..8 y=0..64 xlabel=n ylabel= ticks=none grid w= h=
+  n \lg n                  每行一个表达式（lg = log₂；ln exp sqrt sin min max floor ceil n!）
+  n^2 "quadratic" dashed   表达式后写标签和样式；nolabel 不标注
+  vline: 4 n_0             参考线（默认虚线）；hline: 同理
+  xticks: 1 4:n_0          自定义刻度，值:标签
+  bars: 1 2 1 4            柱形图；points: (1,2) (3,5) 散点
+```
+
+### sets
+
+```
+sets universe layout=venn|nested|manual unit=
+  A                        venn 布局自动放 1–3 个集合
+  NP (-0.6,0) rx=1.4 ry=1  manual：圆心与半径（单位）
+  shade: A&B-C gray        区域公式：& 交 | 并 - 差 ~A 或 A' 补 U 全集
+  in: A-B 1 2 3            把元素写在区域中央
+```
+
+### seq / timeline
+
+```
+seq dir=down|right dots time noboxes step= gap=
+  C "client"               声明参与者（可省略）
+  C -> S "SYN" delay=1     delay 让消息斜着到达；--> 虚线回复；lost 丢失；at= / same 指定时刻
+  C -> C "retry"           自消息
+  S * "crash"              生命线上的事件点
+
+timeline from= to= unit= ticks=2|bounds|none gantt
+  a 0..3 "text" lightblue  同名的区间在同一行
+  d 9 "deadline"           时间点
+  mark: 5 t                竖线
+```
+
+### link
+
+```
+link P[1] -> L[2] "next" dashed bend=20 route=hv|vh from=center|edge
+link                       也可以在下面缩进写多条
+  T[1,2] -> F[5]
+```
+
+引用写法：`A[i]` 数组格、`T[r,c]` 表格格、`L[k]` 链表结点、`H[k]` / `H[k,j]` chains 槽位与结点、`G.a` 图结点、`T[key]` 树结点或 B 树关键字、`A` 整个块。块用块头里的名字或 `id=` 指代。
+
 ### 其它
 
 ```
@@ -174,9 +227,12 @@ figure-suite/
 │   ├── blocks.js          ← array / table / list / chains / text / arrow
 │   ├── tree.js            ← 树（轮廓法整齐布局）
 │   ├── graph.js           ← 图（分层 / 应力 / 圆 / 行 / 网格布局，弯边、自环、分组）
+│   ├── links.js           ← 跨块箭头 link
+│   ├── plot.js            ← 表达式求值 + 函数图
+│   ├── seq.js / timeline.js / sets.js
 │   ├── compose.js         ← 面板组合
 │   ├── edit.js            ← 拖动结点后改写源码
-│   ├── templates.js       ← 30 个模板
+│   ├── templates.js       ← 40 个模板
 │   ├── help.js            ← 语法速查（中英双语数据）
 │   ├── export.js          ← PNG 光栅化、PNG iTXt / SVG metadata 存源码、剪贴板
 │   ├── panel.js           ← 弹出面板

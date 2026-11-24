@@ -9,6 +9,10 @@ const LAYOUTS = {
   graph: layoutGraph,
   list: layoutList,
   chains: layoutChains,
+  plot: layoutPlot,
+  seq: layoutSeq,
+  timeline: layoutTimeline,
+  sets: layoutSets,
   text: layoutText,
   arrow: layoutArrow,
   space: layoutSpace,
@@ -191,11 +195,20 @@ function renderFigure(source, settings = {}, { embedSource = false } = {}) {
     if (pn.caption) svg.label(pn.caption, x + pw / 2, capY, size, '#000', 'text');
   }
 
+  // links between blocks, on top; the canvas grows to hold curves that leave the panels
+  const linkExt = drawLinks(svg, fig, panels.flatMap((pn) => pn.items), ctx, errors);
+  const minX = Math.min(0, linkExt[0]);
+  const minY = Math.min(0, linkExt[1]);
+  const maxX = Math.max(width, linkExt[2]);
+  const maxY = Math.max(height, linkExt[3]);
+
   const pad = num(o.padding, Math.round(size * 0.6));
-  const W = Math.ceil(width + pad * 2);
-  const H = Math.ceil(height + pad * 2);
+  const W = Math.ceil(maxX - minX + pad * 2);
+  const H = Math.ceil(maxY - minY + pad * 2);
   const bg = o.background || conf.background;
-  const out = svg.toString({ width: W, height: H, background: bg === 'transparent' ? null : bg, padding: pad, source: embedSource ? source : null });
-  hits.forEach((h) => { h.x += pad; h.y += pad; h.ox += pad; h.oy += pad; });
+  const offX = pad - minX;
+  const offY = pad - minY;
+  const out = svg.toString({ width: W, height: H, background: bg === 'transparent' ? null : bg, padding: [offX, offY], source: embedSource ? source : null });
+  hits.forEach((h) => { h.x += offX; h.y += offY; h.ox += offX; h.oy += offY; });
   return { svg: out, width: W, height: H, errors: errors.sort((a, b) => a.line - b.line), hits, empty: !fig.blocks.length };
 }

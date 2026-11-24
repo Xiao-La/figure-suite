@@ -441,6 +441,106 @@ table index
   1 1 0 1 0`,
   },
   {
+    group: 'Linked structures',
+    name: 'Pointers between blocks (page table)',
+    source: `figure cols=2 gap=60
+panel
+table PT id=PT
+  0 2
+  1 ""
+  2 5
+panel
+array F vertical start=0
+  "" "" A "" "" B
+link
+  PT[1,2] -> F[2]
+  PT[3,2] -> F[5]`,
+  },
+  {
+    group: 'Plots & sets',
+    name: 'Growth of functions',
+    source: `plot x=1..8 y=0..64 xlabel=n
+  \\lg n
+  n
+  n \\lg n
+  n^2
+  2^n`,
+  },
+  {
+    group: 'Plots & sets',
+    name: 'Asymptotic bound (O)',
+    source: `plot x=0..10 y=0..10 ticks=none xlabel=n
+  0.07 n^2 + 1.5 "c g(n)"
+  1 + 0.6 n + 0.6 sin(2 n) "f(n)"
+  vline: 4.2 n_0`,
+  },
+  {
+    group: 'Plots & sets',
+    name: 'Amortised cost (bars)',
+    source: `plot ylabel=cost
+  bars: 1 2 1 4 1 2 1 8`,
+  },
+  {
+    group: 'Plots & sets',
+    name: 'Venn diagram',
+    source: `sets universe
+  A
+  B
+  C
+  shade: A&B&C gray
+  in: A-B-C 1 2`,
+  },
+  {
+    group: 'Plots & sets',
+    name: 'Complexity classes',
+    source: `sets layout=manual unit=40
+  PSPACE (0,0.25) rx=2.6 ry=1.75
+  NP (-0.65,0) rx=1.45 ry=1
+  coNP "\\text{coNP}" (0.65,0) rx=1.45 ry=1
+  P (0,-0.15) rx=0.55 ry=0.45 lightblue`,
+  },
+  {
+    group: 'Time & protocols',
+    name: 'Message sequence (TCP)',
+    source: `seq
+  C "client"
+  S "server"
+  C -> S SYN delay=1
+  S -> C "SYN, ACK" delay=1
+  C -> S ACK delay=1
+  C -> S data delay=1 lost`,
+  },
+  {
+    group: 'Time & protocols',
+    name: 'Space-time diagram',
+    source: `seq dir=right
+  P
+  Q
+  R
+  P * p_1
+  P -> Q at=1 delay=2
+  R -> Q at=0
+  Q -> P at=4`,
+  },
+  {
+    group: 'Time & protocols',
+    name: 'Interval scheduling',
+    source: `timeline
+  a 0..3
+  b 2..6
+  c 4..7
+  a 7..10
+  mark: 5 t`,
+  },
+  {
+    group: 'Time & protocols',
+    name: 'Gantt chart',
+    source: `timeline gantt
+  P_1 0..24
+  P_2 24..27
+  P_3 27..30`,
+  },
+  {
     group: 'Layout',
     name: 'Before → after panels',
     source: `figure cols=3

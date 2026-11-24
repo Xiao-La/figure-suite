@@ -1,6 +1,6 @@
 # Figure Suite
 
-Draw figures for algorithms, data structures and theoretical computer science from a few lines of text: arrays and DP tables, trees, graphs and automata, linked lists and hash tables, in the clean style of textbooks such as *Introduction to Algorithms* (CLRS). Edit the text in a panel with a live preview, then insert the figure into your note as PNG or SVG. The source is stored inside the image, so you can reopen and change the figure at any time.
+Draw figures for algorithms, data structures and theoretical computer science from a few lines of text: arrays and DP tables, trees, graphs and automata, linked lists and hash tables, function plots, Venn diagrams, message sequences and timelines, in the clean style of textbooks such as *Introduction to Algorithms* (CLRS). Edit the text in a panel with a live preview, then insert the figure into your note as PNG or SVG. The source is stored inside the image, so you can reopen and change the figure at any time.
 
 [中文说明](README.zh-CN.md)
 
@@ -8,15 +8,18 @@ Draw figures for algorithms, data structures and theoretical computer science fr
 
 ![Six theory figures drawn with Figure Suite: an NFA, a Turing machine tape, a Hasse diagram, a parse tree, a Markov chain, and a CYK table](docs/theory.png)
 
+![Six more figures: growth of functions, P/NP/coNP inside PSPACE, a TCP handshake, pointers from an array into a list, a shaded Venn region, and interval scheduling](docs/more.png)
+
 ## Features
 
-- **Six building blocks** cover most figures in algorithms, data structures, automata and formal languages, logic and discrete math: `array`, `table`, `tree`, `graph`, `list` / `chains`, plus panels, arrows and text to combine them.
+- **Ten building blocks** cover most figures in algorithms, data structures, automata and formal languages, complexity, logic, discrete math, networking and operating systems: `array`, `table`, `tree`, `graph`, `list` / `chains`, `plot`, `sets`, `seq`, `timeline`, plus panels, arrows and text to combine them.
+- **Arrows between blocks.** `link P[2] -> L[1]` points from an array cell to a list node, a table cell to a frame, a B-tree leaf to the next.
 - **Automatic layout.** Trees use a tidy layout, and graphs can be layered, force-directed, circular, in a grid or in a row. You can also place nodes yourself, or drag them in the preview and the coordinates are written back to the source.
 - **TeX-quality labels**: `x_1`, `n^2`, `\frac{n}{2}`, `\alpha`, `\le`, `\vdash`, `\subseteq`, `\oplus`, `\hat{x}`, `NIL` in small caps, all in Computer Modern. The fonts are built into the plugin, so the preview, PNG and SVG look the same on every machine.
 - **Export** to a PNG at 1–4× resolution or an SVG, to the clipboard, or straight into the note. Inserted links carry the 1× width, so high-resolution images keep their size.
 - **Re-editable.** Hover over a figure in a note and click the pencil icon to reopen it. **Update** overwrites the file in place and keeps the links working.
 - **Helpful editor.**
-  - 30 starter templates and a searchable built-in syntax reference (English and 中文) whose examples you can insert with one click.
+  - 40 starter templates and a searchable built-in syntax reference (English and 中文) whose examples you can insert with one click.
   - Errors and warnings point at the line, including typos, out-of-range indices and unknown commands.
 
 ## Getting started
@@ -49,9 +52,14 @@ Open **Syntax help** (the `?` button in the panel) for the full reference with e
 | `tree` | BSTs, heaps, AVL and red-black trees (NIL sentinels), B-trees, rotations (subtree triangles), recursion trees, Huffman trees, disjoint-set forests, parse trees, game trees, tries |
 | `graph` | directed, undirected and weighted graphs, BFS/DFS states, shortest paths, MSTs, flow networks, SCCs, DAGs, bipartite matchings, finite automata (DFA, NFA), Markov chains, Hasse diagrams, reduction gadgets, point sets |
 | `list`, `chains` | singly and doubly linked lists; hash tables with chaining, adjacency lists, buckets |
+| `plot` | growth of functions, asymptotic bounds (n₀), amortised cost bars, points |
+| `sets` | Venn diagrams with shaded regions and elements, nested sets, complexity-class pictures |
+| `seq` | protocol message sequences (TCP, two-phase commit), space-time diagrams (Lamport clocks) |
+| `timeline` | interval scheduling, activity selection, deadlines, Gantt charts (CPU scheduling) |
+| `link` | arrows from part of one block to part of another: pointers, page tables, B+-tree leaves |
 | `panel`, `arrow`, `text` | (a) (b) (c) panels, labelled arrows between them, text |
 
-By course, that covers the usual figures of data structures and algorithms, automata and formal languages, computability and complexity (machines, reductions), discrete math (relations, posets, graphs) and probability (Markov chains).
+By course, that covers the usual figures of data structures and algorithms, automata and formal languages, computability and complexity (machines, reductions), discrete math (relations, posets, sets, graphs), probability (Markov chains), networking (protocols), distributed systems (space-time diagrams) and operating systems (scheduling, page tables).
 
 ## Syntax at a glance
 
@@ -83,6 +91,11 @@ array A
   - `layout=auto|layered|force|circle|grid|line|manual`; `dir=up` draws a layered layout bottom-up (Hasse diagrams).
   - `group:`, `rank:` and `shade:` work on nodes; `bend=`, `loop=` and `swap` shape edges.
 - **list / chains**: `list L.head double` with the keys in the body; `chains T` with a line like `1: k1 k4` for each slot.
+- **plot**: one expression per line, `n \lg n`, `2^n`, `\frac{n}{2}` (label and style after it: `n^2 "quadratic" dashed`); `x=1..8 y=0..64 xlabel=n`; `vline: 4 n_0`, `bars: 1 2 1 4`, `points: (1,2)`.
+- **sets**: one set per line; `shade: A&B-C gray` (`& | -`, `~A` or `A'`); `in: A-B 1 2` writes elements in a region; `layout=venn|nested|manual` with `(x,y) rx= ry=` for your own ellipses; `universe`.
+- **seq**: `C -> S "SYN" delay=1` (slanted when it takes time), `-->` for a reply, `lost`, `A -> A` self message, `A * "crash"` event; `dir=right` for space-time diagrams.
+- **timeline**: `a 0..3`, a repeated name continues its row, `d 9 "deadline"` point event, `mark: 5 t`; `gantt` for a single row.
+- **link**: `link A[2] -> B[1] "label" dashed bend=20`; references are `A[i]`, `T[r,c]`, `L[k]`, `H[k,j]`, `G.node`, `T[key]` or a whole block; name a block by its header name or `id=`.
 
 The in-app reference lists every option.
 
@@ -121,6 +134,9 @@ node tests/test-engine.js   # parser, labels, every template and help example, P
 | `src/blocks.js` | array, table, list, chains, text, arrow |
 | `src/tree.js` | tidy tree layout |
 | `src/graph.js` | graph layouts, edges, loops, groups |
+| `src/links.js` | `link` arrows between blocks |
+| `src/plot.js` | expression evaluator and `plot` |
+| `src/seq.js`, `src/timeline.js`, `src/sets.js` | `seq`, `timeline`, `sets` |
 | `src/compose.js` | panels and the final SVG |
 | `src/export.js` | PNG rasterising, source embedding, clipboard |
 | `src/panel.js` | the editor panel |

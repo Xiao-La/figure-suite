@@ -207,6 +207,110 @@ const HELP = [
     ],
   },
   {
+    id: 'links',
+    title: { en: 'link (between blocks)', zh: 'link 跨块箭头' },
+    items: [
+      { p: { en: 'A `link` line draws an arrow from a part of one block to a part of another — pointers from an array into a list, a page table into frames, B+-tree leaf links. Name a block with `id=` or by the name in its header (`array P`).', zh: '`link` 行画一条从某个块的某部分指向另一个块某部分的箭头——数组指向链表、页表指向物理帧、B+ 树叶子相连。用 `id=` 或块头里的名字（如 `array P`）指代块。' } },
+      { ex: 'figure cols=1\npanel\narray P\n  "" "" ""\npanel\nlist L\n  a b c\nlink\n  P[1] -> L[1]\n  P[3] -> L[3] dashed', note: { en: 'pointers from array cells into a list', zh: '数组格子指向链表结点' } },
+      {
+        ref: [
+          ['link A[2] -> B[1]', { en: 'one link; or put several on indented lines under a bare link', zh: '一条链接；也可在单独的 link 下缩进写多条' }],
+          ['A[i]  T[r,c]  L[k]  H[k]  H[k,j]', { en: 'array cell, table cell, list node, chains slot, j-th node in slot k', zh: '数组格、表格格、链表结点、chains 槽位、槽位 k 的第 j 个结点' }],
+          ['G.a  T[key]  A', { en: 'graph node, tree node or B-tree key, the whole block', zh: '图结点、树结点或 B 树关键字、整个块' }],
+          ['->  <-  <->  --', { en: 'arrow heads', zh: '箭头方向' }],
+          ['"label" bend=20 swap', { en: 'label; curve (+ = left); label on the other side', zh: '标签；弯曲（正数向左）；标签换边' }],
+          ['route=hv|vh', { en: 'right-angle route: horizontal first or vertical first', zh: '直角折线：先横后竖或先竖后横' }],
+          ['from=center|edge', { en: 'start with a dot in the cell (default for empty cells) or at its edge', zh: '从格子中心的圆点出发（空格子默认）或从边缘出发' }],
+          ['dashed dotted thick red width=2', { en: 'style', zh: '样式' }],
+        ],
+      },
+    ],
+  },
+  {
+    id: 'plot',
+    title: { en: 'plot', zh: 'plot 函数图' },
+    items: [
+      { p: { en: 'Function curves for growth rates and asymptotic bounds, plus bars, points and reference lines. Each data line is an expression in n (or x); the label is the expression itself unless you quote one.', zh: '画增长率、渐近界的函数曲线，以及柱形、散点、参考线。每个数据行是一个关于 n（或 x）的表达式；不另给引号标签时，标签就是表达式本身。' } },
+      { ex: 'plot x=1..8 y=0..64 xlabel=n\n  \\lg n\n  n\n  n \\lg n\n  n^2\n  2^n', note: { en: 'growth of functions', zh: '函数增长' } },
+      { ex: 'plot x=0..10 y=0..10 ticks=none xlabel=n\n  0.07 n^2 + 1.5 "c g(n)"\n  1 + 0.6 n + 0.6 sin(2 n) "f(n)"\n  vline: 4.2 n_0', note: { en: 'f(n) = O(g(n)) beyond n_0', zh: 'n_0 之后 f(n) = O(g(n))' } },
+      {
+        ref: [
+          ['n \\lg n   2^n   n!   \\sqrt n   \\frac{n}{2}', { en: 'TeX-style expressions; lg = log = log2, ln, exp, sin, cos, min, max, floor, ceil', zh: '类 TeX 表达式；lg = log = log₂，另有 ln exp sin cos min max floor ceil' }],
+          ['n^2 "quadratic" dashed red', { en: 'label and style after the expression; nolabel hides it', zh: '表达式后写标签和样式；nolabel 不标注' }],
+          ['x=1..8 y=0..64', { en: 'ranges (y is automatic when left out)', zh: '坐标范围（省略 y 时自动）' }],
+          ['xlabel=n ylabel=T(n) ticks=none grid', { en: 'axis names, hide ticks, light grid', zh: '坐标轴名、不画刻度、浅色网格' }],
+          ['xticks: 1 4:n_0   yticks: …', { en: 'own tick positions; value:label', zh: '自定义刻度；值:标签' }],
+          ['vline: 4 n_0   hline: 3 c dotted', { en: 'reference lines (dashed by default)', zh: '参考线（默认虚线）' }],
+          ['bars: 1 2 1 4   points: (1,2) (3,5)', { en: 'bar chart (amortised cost), scattered points', zh: '柱形图（摊还代价）、散点' }],
+          ['w= h=', { en: 'size of the plot area in px', zh: '绘图区宽高（像素）' }],
+        ],
+      },
+      { ex: 'plot ylabel=cost\n  bars: 1 2 1 4 1 2 1 8', note: { en: 'amortised cost of a dynamic table', zh: '动态表的摊还代价' } },
+    ],
+  },
+  {
+    id: 'seq',
+    title: { en: 'seq', zh: 'seq 时序图' },
+    items: [
+      { p: { en: 'Message sequence charts for protocols (time runs down) and space-time diagrams for distributed algorithms (`dir=right`, time runs right). Actors appear in the order they are first named.', zh: '协议的消息时序图（时间向下），以及分布式算法的时空图（`dir=right`，时间向右）。参与者按第一次出现的顺序排列。' } },
+      { ex: 'seq\n  C "client"\n  S "server"\n  C -> S SYN delay=1\n  S -> C "SYN, ACK" delay=1\n  C -> S ACK delay=1', note: { en: 'TCP handshake (slanted: messages take time)', zh: 'TCP 三次握手（斜线表示传输需要时间）' } },
+      { ex: 'seq dir=right\n  P\n  Q\n  R\n  P * p_1\n  P -> Q at=1 delay=2\n  R -> Q at=0\n  Q -> P at=4', note: { en: 'space-time diagram (Lamport clocks)', zh: '时空图（Lamport 时钟）' } },
+      {
+        ref: [
+          ['C "client"', { en: 'declare an actor with a label (optional)', zh: '声明参与者及其标签（可省略）' }],
+          ['A -> B "text"   A --> B', { en: 'message; --> dashed (reply); <- and <-> also work', zh: '消息；--> 为虚线（回复）；也支持 <- 和 <->' }],
+          ['delay=1  at=3  same', { en: 'arrival steps later (slanted); send at step 3; same step as the previous line', zh: '晚几步到达（斜线）；在第 3 步发送；与上一行同一步' }],
+          ['lost', { en: 'message lost on the way (×)', zh: '消息丢失（画 ×）' }],
+          ['A -> A "retry"', { en: 'self message', zh: '发给自己的消息' }],
+          ['A * "crash"', { en: 'event dot on a lifeline', zh: '生命线上的事件点' }],
+          ['dir=down|right  dots  time  noboxes', { en: 'direction; dots at send/receive; arrow on lifelines; no boxes', zh: '方向；收发处画点；生命线画箭头；不画方框' }],
+          ['step= gap= delay=', { en: 'px per step, px between actors, default delay', zh: '每步像素、参与者间距、默认延迟' }],
+        ],
+      },
+    ],
+  },
+  {
+    id: 'timeline',
+    title: { en: 'timeline', zh: 'timeline 时间轴' },
+    items: [
+      { p: { en: 'Intervals on a time axis — interval scheduling, activity selection, deadlines — and Gantt charts for CPU scheduling. One row per name; a repeated name continues its row.', zh: '时间轴上的区间——区间调度、活动选择、截止时间——以及 CPU 调度的甘特图。每个名字一行，重复的名字接在同一行。' } },
+      { ex: 'timeline\n  a 0..3\n  b 2..6\n  c 4..7\n  a 7..10\n  d 9 d_j\n  mark: 5 t', note: { en: 'intervals, a point event, a marked time', zh: '区间、时间点事件、标记时刻' } },
+      { ex: 'timeline gantt\n  P_1 0..24\n  P_2 24..27\n  P_3 27..30', note: { en: 'Gantt chart (FCFS)', zh: '甘特图（先来先服务）' } },
+      {
+        ref: [
+          ['a 2..5 "text" lightblue', { en: 'interval with text inside and a colour', zh: '区间，内含文字并着色' }],
+          ['d 9 "deadline"', { en: 'point event (diamond)', zh: '时间点事件（菱形）' }],
+          ['mark: 5 t solid', { en: 'vertical line at a time (dashed by default)', zh: '某时刻的竖线（默认虚线）' }],
+          ['from=0 to=12 unit=20 h=', { en: 'range, px per time unit, bar height', zh: '范围、每单位像素、条高' }],
+          ['ticks=2|bounds|none', { en: 'tick step, ticks at interval ends, or none', zh: '刻度步长、只在区间端点、或不画' }],
+          ['gantt  labels=none  fill=', { en: 'one row with names inside; hide row names; default fill', zh: '单行、名字在条内；不显示行名；默认填充色' }],
+        ],
+      },
+    ],
+  },
+  {
+    id: 'sets',
+    title: { en: 'sets', zh: 'sets 集合图' },
+    items: [
+      { p: { en: 'Venn diagrams with shaded regions, nested sets, and freely placed ellipses (complexity classes). Region formulas use & | - and complements.', zh: '带阴影区域的韦恩图、嵌套集合、自由放置的椭圆（复杂度类）。区域公式用 & | - 和补集。' } },
+      { ex: 'sets universe\n  A\n  B\n  shade: A-B lightblue', note: { en: 'A − B', zh: 'A − B' } },
+      { ex: 'sets universe\n  A\n  B\n  C\n  shade: A&B&C gray\n  in: A&~B&~C 1 2', note: { en: 'three sets, a region and its elements', zh: '三个集合，阴影区域及其元素' } },
+      { ex: 'sets layout=manual unit=40\n  PSPACE (0,0.25) rx=2.6 ry=1.75\n  NP (-0.65,0) rx=1.45 ry=1\n  coNP "\\text{coNP}" (0.65,0) rx=1.45 ry=1\n  P (0,-0.15) rx=0.55 ry=0.45 lightblue', note: { en: 'complexity classes', zh: '复杂度类' } },
+      {
+        ref: [
+          ['A "label" colour', { en: 'a set (venn: 1–3 sets placed for you)', zh: '一个集合（venn 布局自动放置 1–3 个）' }],
+          ['A (x,y) r= rx= ry=', { en: 'centre and radii in units (layout=manual)', zh: '圆心和半径，以单位计（layout=manual）' }],
+          ['shade: A&B | C gray', { en: 'shade a region; & ∩, | ∪, - minus, ~A or A\' complement, U everything', zh: '给区域上色；& 交、| 并、- 差、~A 或 A\' 补、U 全集' }],
+          ['in: A-B 1 2 3', { en: 'write elements in the middle of a region', zh: '把元素写在区域中央' }],
+          ['layout=venn|nested|manual', { en: 'side by side, one inside the next, or your positions', zh: '并排、逐层嵌套、或自定位置' }],
+          ['universe  universe=\\Omega', { en: 'box around everything, with a label', zh: '外框（全集）及其标签' }],
+          ['unit= fill=', { en: 'px per unit, fill for every set', zh: '每单位像素、所有集合的填充色' }],
+        ],
+      },
+      { ex: 'sets nested\n  EXP\n  PSPACE\n  NP\n  P', note: { en: 'nested classes', zh: '嵌套的类' } },
+    ],
+  },
+  {
     id: 'layout',
     title: { en: 'Panels & layout', zh: '面板与排版' },
     items: [

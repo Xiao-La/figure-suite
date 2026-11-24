@@ -107,7 +107,8 @@ class SVG {
     const defs = [...this.glyphs].map(([id, d]) => `<path id="${id}" d="${d}"/>`).join('');
     const bg = background && background !== 'transparent' ? `<rect x="0" y="0" width="${n2(width)}" height="${n2(height)}" fill="${background}"/>` : '';
     const meta = source != null ? `<metadata id="figure-suite-source">${esc(source)}</metadata>` : '';
-    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${n2(width)}" height="${n2(height)}" viewBox="0 0 ${n2(width)} ${n2(height)}">${meta}<defs>${defs}</defs>${bg}<g transform="translate(${n2(padding)} ${n2(padding)})">${this.parts.join('')}</g></svg>`;
+    const [px, py] = Array.isArray(padding) ? padding : [padding, padding];
+    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${n2(width)}" height="${n2(height)}" viewBox="0 0 ${n2(width)} ${n2(height)}">${meta}<defs>${defs}${this.defs ? this.defs.join('') : ''}</defs>${bg}<g transform="translate(${n2(px)} ${n2(py)})">${this.parts.join('')}</g></svg>`;
   }
 }
 

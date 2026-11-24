@@ -224,11 +224,12 @@ function parseLabel(src, mode = 'math') {
       if (ch === "'") return { t: 'c', ch: '′', st: 'r', prime: true };
       return { t: 'c', ch, st: 'r' };
     }
-    return { t: 'c', ch, st: st || 'r' };
+    // text-mode characters never get math spacing (B+ tree, a-b)
+    return { t: 'c', ch, st: st || 'r', txt: m === 'text' };
   };
 
   const textRun = (out, text, st) => {
-    for (const ch of text) out.push(ch === ' ' ? { t: 'sp', w: 0.333 } : { t: 'c', ch, st });
+    for (const ch of text) out.push(ch === ' ' ? { t: 'sp', w: 0.333 } : { t: 'c', ch, st, txt: true });
   };
 
   function command(out, m, st) {
@@ -405,7 +406,7 @@ function hbox(atoms, level = 0) {
   const rawKind = (atom) => {
     if (!atom) return 'end';
     if (atom.t === 'sp') return 'sp';
-    if (atom.t !== 'c' || atom.st === 'sc') return 'ord';
+    if (atom.t !== 'c' || atom.st === 'sc' || atom.txt) return 'ord';
     if (BIN.has(atom.ch)) return 'bin';
     if (REL.has(atom.ch)) return 'rel';
     if (OPEN.has(atom.ch)) return 'open';

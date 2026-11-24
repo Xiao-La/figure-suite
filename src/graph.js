@@ -664,6 +664,7 @@ function layoutGraph(block, ctx, errors) {
     if (ann.above) { const m = labelSize(ann.above, size); rec.label(ann.above, x, y - nd.hh - gapA - m.h / 2, size); }
     if (ann.below) { const m = labelSize(ann.below, size); rec.label(ann.below, x, y + nd.hh + gapA + m.h / 2, size); }
     rec.hits.push({ kind: 'gnode', block: block.index, id, x, y, r: Math.max(nd.hw, nd.hh, 6), unit, ux: nd.ux, uy: nd.uy, line: nd.line });
+    rec.anchor(id, { kind: nd.shape === 'box' || nd.shape === 'none' ? 'rect' : 'ellipse', cx: x, cy: y, hw: Math.max(nd.hw, 3), hh: Math.max(nd.hh, 3) });
   }
   const res = rec.done(2);
   res.graph = { unit, ids, nodes: N };

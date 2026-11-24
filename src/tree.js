@@ -213,6 +213,12 @@ function layoutTree(block, ctx, errors) {
   for (const n of all) {
     if (n.ghost) continue;
     drawTreeNode(rec, n, ctx, keyW, R, o);
+    const round = n.shape === 'circle' || n.shape === 'ellipse';
+    rec.anchor(n.label, { kind: round ? 'ellipse' : 'rect', cx: n.x, cy: n.y + (n.bot - n.top) / 2, hw: n.hw, hh: (n.top + n.bot) / 2 });
+    if (n.shape === 'keys') {
+      const left = n.x - (n.keys.length * keyW) / 2;
+      n.keys.forEach((k, i) => rec.anchor(k, { kind: 'rect', cx: left + (i + 0.5) * keyW, cy: n.y + n.bot / 2, hw: keyW / 2, hh: n.bot / 2 }));
+    }
     if (n.flags.has('loop')) {
       const top = n.y - n.top;
       rec.raw((svg, dx, dy) => {

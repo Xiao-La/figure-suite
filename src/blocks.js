@@ -11,6 +11,16 @@ class Rec {
     this.ops = [];
     this.box = [Infinity, Infinity, -Infinity, -Infinity];
     this.hits = [];
+    this.anchors = new Map();
+  }
+
+  /**
+   * Name a shape that `link` lines can point at. shape: { kind: 'rect' | 'ellipse',
+   * cx, cy, hw, hh, cell } in block coordinates; cell = pointer-style start (centre dot).
+   */
+  anchor(key, shape) {
+    const k = String(key);
+    if (k && !this.anchors.has(k)) this.anchors.set(k, shape);
   }
 
   ext(x1, y1, x2, y2) {
@@ -76,16 +86,22 @@ class Rec {
     x1 -= pad; y1 -= pad; x2 += pad; y2 += pad;
     const ops = this.ops;
     const hits = this.hits;
-    return {
+    const anchors = this.anchors;
+    anchors.set('', { kind: 'rect', cx: (x1 + x2) / 2, cy: (y1 + y2) / 2, hw: (x2 - x1) / 2, hh: (y2 - y1) / 2, whole: true });
+    const res = {
       w: x2 - x1,
       h: y2 - y1,
+      anchors,
+      shift: null, // set when drawn: block coordinates → figure coordinates
       draw(svg, ox, oy, sink) {
         const dx = ox - x1;
         const dy = oy - y1;
+        res.shift = [dx, dy];
         for (const fn of ops) fn(svg, dx, dy);
         if (sink) for (const h of hits) sink.push({ ...h, x: h.x + dx, y: h.y + dy, ox: dx, oy: dy });
       },
     };
+    return res;
   }
 }
 
@@ -188,6 +204,7 @@ function layoutArray(block, ctx, errors) {
     const col = fillFor(c.color || shade.get(idx) || fillName, ctx, 'array');
     rec.rect(cellX(idx), cellY(idx), cw, ch, col.fill, { width: ctx.lw });
     rec.label(c.label, cellX(idx) + cw / 2, cellY(idx) + ch / 2, size, col.text);
+    rec.anchor(idx, { kind: 'rect', cx: cellX(idx) + cw / 2, cy: cellY(idx) + ch / 2, hw: cw / 2, hh: ch / 2, cell: !c.label });
   });
   if (!n) rec.ext(0, 0, cw, ch);
   // name
@@ -355,6 +372,7 @@ function layoutTable(block, ctx, errors) {
   rows.forEach((row, r) => row.forEach((c, k) => {
     const col = fillFor(c.color || shade.get(`${r + start},${k + start}`) || o.fill, ctx, 'table');
     rec.label(c.label, xs[k] + colW[k] / 2, r * rowH + rowH / 2, size, col.text);
+    rec.anchor(`${r + start},${k + start}`, { kind: 'rect', cx: xs[k] + colW[k] / 2, cy: r * rowH + rowH / 2, hw: colW[k] / 2, hh: rowH / 2, cell: !c.label });
   }));
   rec.ext(0, 0, W, H);
   // grid styles
@@ -473,6 +491,7 @@ function layoutList(block, ctx, errors) {
       ? [{ slash: k === 0 }, { label: nd.label }, { slash: last }]
       : [{ label: nd.label }, { slash: last }];
     drawRecord(rec, starts[k], 0, fields, fw, h, nd.color || shade.get(k + 1) || o.fill, ctx);
+    rec.anchor(k + 1, { kind: 'rect', cx: starts[k] + nodeW / 2, cy: h / 2, hw: nodeW / 2, hh: h / 2 });
   });
   const off = doubly ? h * 0.16 : 0;
   for (let k = 0; k + 1 < nodes.length; k++) {
@@ -528,6 +547,7 @@ function layoutChains(block, ctx, errors) {
   slots.forEach((slot, r) => {
     const y = r * rowH;
     rec.rect(0, y, sw, rowH, slotFill.fill, { width: ctx.lw });
+    rec.anchor(slot.key, { kind: 'rect', cx: sw / 2, cy: y + rowH / 2, hw: sw / 2, hh: rowH / 2, cell: true });
     rec.labelAt(slot.key, -size * 0.45, y + rowH / 2, size * 0.8, 'r');
     if (!slot.items.length) {
       rec.line(sw * 0.25, y + rowH * 0.75, sw * 0.75, y + rowH * 0.25, { width: ctx.lw });
@@ -541,6 +561,7 @@ function layoutChains(block, ctx, errors) {
       const last = k === slot.items.length - 1;
       const fields = doubly ? [{ slash: k === 0 }, { label: it.label }, { slash: last }] : [{ label: it.label }, { slash: last }];
       drawRecord(rec, x, cy - rh / 2, fields, fw, rh, it.color || shade.get(it.label) || o.fill, ctx);
+      rec.anchor(`${slot.key},${k + 1}`, { kind: 'rect', cx: x + (nf * fw) / 2, cy, hw: (nf * fw) / 2, hh: rh / 2 });
       if (!last) {
         const nx = x + nf * fw + gap;
         const off = doubly ? rh * 0.16 : 0;

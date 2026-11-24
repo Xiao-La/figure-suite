@@ -1,0 +1,42 @@
+figure cols=3
+panel (a) growth of functions
+plot x=1..8 y=0..64 xlabel=n
+  \lg n
+  n
+  n \lg n
+  n^2
+  2^n
+panel (b) $\mathrm{P}$, $\mathrm{NP}$ and $\mathrm{coNP}$
+sets layout=manual unit=40
+  PSPACE (0,0.25) rx=2.6 ry=1.75
+  NP (-0.65,0) rx=1.45 ry=1
+  coNP "\text{coNP}" (0.65,0) rx=1.45 ry=1
+  P (0,-0.15) rx=0.55 ry=0.45 lightblue
+panel (c) three-way handshake
+seq
+  C "client"
+  S "server"
+  C -> S SYN delay=1
+  S -> C "SYN, ACK" delay=1
+  C -> S ACK delay=1
+panel (d) pointers into a list
+array P
+  "" "" ""
+list L
+  a b c
+link
+  P[1] -> L[1]
+  P[3] -> L[3] dashed
+panel (e) $A \cap B - C$
+sets universe
+  A
+  B
+  C
+  shade: A&B&~C lightblue
+panel (f) interval scheduling
+timeline
+  a 0..3
+  b 2..6
+  c 4..7
+  a 7..10
+  mark: 5 t

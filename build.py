@@ -40,7 +40,7 @@ const {
 
 ORDER = [
     "fontdata.js", "font.js", "mathtext.js", "svg.js", "parse.js", "blocks.js", "tree.js",
-    "graph.js", "compose.js", "edit.js", "templates.js", "help.js", "export.js", "panel.js", "main.js",
+    "graph.js", "links.js", "plot.js", "seq.js", "timeline.js", "sets.js", "compose.js", "edit.js", "templates.js", "help.js", "export.js", "panel.js", "main.js",
 ]
 
 

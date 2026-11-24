@@ -11,7 +11,7 @@
  * ` // ...` after whitespace ends a line with a comment.
  */
 
-const BLOCK_KINDS = ['array', 'table', 'tree', 'graph', 'list', 'chains', 'text', 'arrow', 'space'];
+const BLOCK_KINDS = ['array', 'table', 'tree', 'graph', 'list', 'chains', 'plot', 'seq', 'timeline', 'sets', 'text', 'arrow', 'space'];
 /** Bare words in a block header that act as boolean options. */
 const HEADER_FLAGS = {
   array: ['vertical'],
@@ -20,6 +20,10 @@ const HEADER_FLAGS = {
   graph: ['directed', 'undirected', 'digraph'],
   list: ['double', 'doubly', 'single', 'singly'],
   chains: ['double', 'doubly', 'single', 'singly'],
+  plot: ['grid'],
+  seq: ['dots', 'time', 'boxes', 'noboxes'],
+  timeline: ['gantt'],
+  sets: ['venn', 'nested', 'manual', 'universe'],
   text: ['bold', 'math'],
   arrow: ['both'],
   space: [],
@@ -28,13 +32,17 @@ const HEADER_FLAGS = {
 const KNOWN_OPTS = {
   figure: ['cols', 'columns', 'gap', 'rowgap', 'size', 'fill', 'lw', 'align', 'padding', 'background'],
   panel: ['dir', 'gap'],
-  array: ['start', 'index', 'w', 'h', 'fill', 'label', 'vertical', 'size'],
-  table: ['start', 'index', 'brackets', 'matrix', 'grid', 'w', 'h', 'fill', 'uniform', 'size'],
-  tree: ['r', 'levelgap', 'sibgap', 'shape', 'fill', 'arrows', 'trifill', 'size'],
-  graph: ['layout', 'dir', 'unit', 'r', 'shape', 'fill', 'spread', 'cols', 'directed', 'undirected', 'size'],
-  list: ['double', 'single', 'singly', 'fields', 'w', 'h', 'gap', 'fill', 'size'],
-  chains: ['double', 'single', 'singly', 'start', 'w', 'slot', 'h', 'fill', 'slotfill', 'size'],
-  text: ['size', 'mode', 'math', 'bold', 'align', 'color'],
+  array: ['start', 'index', 'w', 'h', 'fill', 'label', 'vertical', 'size', 'id'],
+  table: ['start', 'index', 'brackets', 'matrix', 'grid', 'w', 'h', 'fill', 'uniform', 'size', 'id'],
+  tree: ['r', 'levelgap', 'sibgap', 'shape', 'fill', 'arrows', 'trifill', 'size', 'id'],
+  graph: ['layout', 'dir', 'unit', 'r', 'shape', 'fill', 'spread', 'cols', 'directed', 'undirected', 'size', 'id'],
+  list: ['double', 'single', 'singly', 'fields', 'w', 'h', 'gap', 'fill', 'size', 'id'],
+  chains: ['double', 'single', 'singly', 'start', 'w', 'slot', 'h', 'fill', 'slotfill', 'size', 'id'],
+  plot: ['x', 'y', 'w', 'h', 'xlabel', 'ylabel', 'ticks', 'grid', 'size', 'id'],
+  seq: ['dir', 'step', 'gap', 'delay', 'dots', 'time', 'boxes', 'noboxes', 'size', 'id'],
+  timeline: ['from', 'to', 'unit', 'h', 'ticks', 'gantt', 'labels', 'fill', 'size', 'id'],
+  sets: ['layout', 'unit', 'universe', 'venn', 'nested', 'manual', 'fill', 'size', 'id'],
+  text: ['size', 'mode', 'math', 'bold', 'align', 'color', 'id'],
   arrow: ['len', 'dir', 'width', 'both', 'size'],
   space: [],
 };
@@ -51,12 +59,16 @@ const OPT_VALUES = {
   'figure.align': ['top', 'center', 'bottom'],
   'figure.columns': ['aligned', 'packed'],
   'text.align': ['left', 'center', 'right'],
+  'plot.ticks': ['on', 'none', 'off'],
+  'seq.dir': ['down', 'right'],
+  'timeline.labels': ['left', 'none'],
+  'sets.layout': ['venn', 'nested', 'manual'],
 };
 
 /** Options whose value must be a number (min, or null for any). */
 const NUMERIC_OPTS = {
   cols: 1, gap: 0, rowgap: 0, size: 4, lw: 0.1, padding: 0, start: null, w: 1, h: 1, r: 1, levelgap: 0, sibgap: 0,
-  unit: 1, spread: 0.05, len: 1, width: 0.1, slot: 1,
+  unit: 1, spread: 0.05, len: 1, width: 0.1, slot: 1, step: 1, delay: 0, from: null, to: null,
 };
 
 function checkOpts(kind, opts, line, errors) {
@@ -98,6 +110,10 @@ const DIRECTIVES = {
   graph: ['group', 'rank', 'shade', 'color'],
   list: ['shade', 'names', 'color'],
   chains: ['shade', 'color'],
+  plot: ['points', 'bars', 'xticks', 'yticks', 'hline', 'vline'],
+  seq: [],
+  timeline: ['mark'],
+  sets: ['shade', 'in'],
   text: [],
   arrow: [],
   space: [],
@@ -164,7 +180,7 @@ function splitArgs(tokens) {
 
 function parseFigure(source) {
   const lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
-  const fig = { opts: {}, panels: [], errors: [], blocks: [] };
+  const fig = { opts: {}, panels: [], errors: [], blocks: [], links: [] };
   let panel = null;
   let block = null;
   let implicit = false;
@@ -207,8 +223,14 @@ function parseFigure(source) {
       newPanel(args.pos.join(' '), args.opts, lineNo, false);
       return;
     }
+    if (head === 'link') {
+      // links sit on top of the whole figure: no panel, not a block
+      block = { kind: 'link', line: lineNo, rest: trimmed.slice(tokens[0].text.length), body: [] };
+      fig.links.push(block);
+      return;
+    }
     if (!BLOCK_KINDS.includes(head)) {
-      fig.errors.push({ line: lineNo, msg: `Unknown block "${tokens[0].text}" (expected ${BLOCK_KINDS.join(', ')}, panel or figure)` });
+      fig.errors.push({ line: lineNo, msg: `Unknown block "${tokens[0].text}" (expected ${BLOCK_KINDS.join(', ')}, link, panel or figure)` });
       return;
     }
     const args = splitArgs(tokens.slice(1));

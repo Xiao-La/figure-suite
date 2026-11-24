@@ -194,6 +194,196 @@ check('colors are not typos', !msgs('tree\n  1 red\n    2 #abc thick').length);
   check('theory showcase renders cleanly', !theory.errors.length, theory.errors.map((e) => `${e.line}: ${e.msg}`).join('; '));
 }
 
+// ---- 1.1: links, plot, seq, timeline, sets ----
+/** Lay out the first block of `src` alone; labels drawn are recorded with their centres. */
+const L = (src) => {
+  const f = api.parseFigure(src);
+  const errors = [...f.errors];
+  const b = f.blocks[0];
+  const box = api.LAYOUTS[b.kind](b, { size: 16, lw: 1, fills: { array: 'white', table: 'white', tree: 'white', graph: 'white', list: 'light' } }, errors);
+  const svg = new api.SVG();
+  const labels = [];
+  const orig = svg.label.bind(svg);
+  svg.label = (text, x, y, ...rest) => { labels.push({ text, x, y }); return orig(text, x, y, ...rest); };
+  box.draw(svg, 0, 0, []);
+  // back to layout coordinates (the ones anchors use)
+  const [sx, sy] = box.shift || [0, 0];
+  for (const l of labels) { l.x -= sx; l.y -= sy; }
+  return { box, errors, labels, svg: svg.toString ? svg.toString(box.w, box.h, 0) : '' };
+};
+const warns = (r) => r.errors.map((e) => e.msg).join('; ');
+const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
+
+// links
+{
+  const f = api.parseFigure('array P id=P\n  1 2\nlist L\n  a b\nlink P[1] -> L[2] "next"\nlink\n  P[2] -> L[1] dashed');
+  check('link lines are not panels or blocks', f.panels.length === 1 && f.blocks.length === 2 && f.links.length === 2, `${f.panels.length} ${f.blocks.length} ${f.links.length}`);
+  const spec = api.parseLinkSpec('T[1,2]->T.x[3] "a b" bend=20 dashed red');
+  check('link spec parses', spec.from === 'T[1,2]' && spec.to === 'T.x[3]' && spec.arrow === '->' && spec.label === 'a b' && spec.opts.bend === '20' && spec.flags.has('dashed') && spec.flags.has('red'), JSON.stringify(spec));
+  check('arrows inside brackets stay put', api.parseLinkSpec('A[x->y] <- B').to === 'B');
+  check('bad link spec is an error', !!api.parseLinkSpec('A B').error);
+  const rect = { kind: 'rect', cx: 0, cy: 0, hw: 10, hh: 5 };
+  const pb = api.shapeBoundary(rect, 100, 0);
+  check('rect boundary', near(pb[0], 10) && near(pb[1], 0), pb);
+  const pc = api.shapeBoundary(rect, 100, 100);
+  check('rect boundary at a corner side', near(pc[0], 5) && near(pc[1], 5), pc);
+  const pe = api.shapeBoundary({ kind: 'ellipse', cx: 0, cy: 0, hw: 10, hh: 5 }, 0, -50);
+  check('ellipse boundary', near(pe[0], 0) && near(pe[1], -5), pe);
+  const ok = R('figure cols=2\npanel\narray P\n  1 2 3\npanel\nlist L\n  a b c\nlink P[1] -> L[2] "next"\nlink P -> L');
+  check('links resolve cleanly', !ok.errors.length, warns(ok));
+  const plain = R('figure cols=2\npanel\narray P\n  1 2 3\npanel\nlist L\n  a b c');
+  check('links add paths', (ok.svg.match(/<path/g) || []).length > (plain.svg.match(/<path/g) || []).length);
+  const bad = R('array P\n  1 2\nlink P[9] -> Q[1]\nlink X -> P');
+  check('unknown link targets warn', bad.errors.length === 3 && bad.errors.every((e) => e.warn), warns(bad));
+  check('unknown block lists the names', /named blocks: P/.test(warns(bad)), warns(bad));
+  const grow = R('array P\n  1 2\nlink P[1] -> P[2] bend=80 "far above"');
+  const base = R('array P\n  1 2');
+  check('links grow the canvas', grow.height > base.height, `${grow.height} vs ${base.height}`);
+  const many = R('table T id=T\n  1 2\n  3 4\ntree B id=B\n  [3 7]\n    [1 2]\n    [5]\n    [9]\ngraph G id=G\n  a -> b\nchains H id=H\n  0: x y\nlink\n  T[1,1] -> T[2,2]\n  B[5] -> B[9] dashed\n  G.a -> H[0]\n  H[0,2] -> T[1,2] route=hv');
+  check('links reach table cells, B-tree keys, graph nodes, chains', !many.errors.length, warns(many));
+}
+
+// plot: expression evaluator
+{
+  const ev = (src, x) => api.compileExpr(src)(x);
+  check('n lg n', near(ev('n \\lg n', 8), 24));
+  check('n log n (log = lg)', near(ev('n log n', 8), 24));
+  check('2^n', near(ev('2^n', 5), 32));
+  check('-n^2 is -(n^2)', near(ev('-n^2', 3), -9));
+  check('\\frac{n}{2}', near(ev('\\frac{n}{2}', 7), 3.5));
+  check('implicit product 2n', near(ev('2n', 4), 8));
+  check('n! via gamma', near(ev('n!', 5), 120, 1e-6), ev('n!', 5));
+  check('functions without parentheses', near(ev('\\sqrt n', 16), 4) && near(ev('sin(0)', 0), 0));
+  check('n^{1/2}', near(ev('n^{1/2}', 9), 3));
+  check('2^2^3 is right-associative', near(ev('2^2^3', 0), 256));
+  check('x and t also work', near(ev('x^2', 3), 9) && near(ev('3t', 2), 6));
+  let threw = false;
+  try { api.compileExpr('n + * 2'); } catch (e) { threw = true; }
+  check('bad expression throws', threw);
+  threw = false;
+  try { api.compileExpr('foo(n)'); } catch (e) { threw = true; }
+  check('unknown function throws', threw);
+}
+
+// plot: layout
+{
+  const r = R('plot x=1..8\n  n\n  n^2 "quadratic" dashed\n  \\lg n');
+  check('plot renders cleanly', !r.errors.length && !r.empty, warns(r));
+  const lab = L('plot x=1..8\n  n\n  n^2\n  \\lg n').labels.map((l) => l.text);
+  check('every curve is labelled', ['n', 'n^2', '\\lg n'].every((t) => lab.includes(t)), lab.join('|'));
+  const auto = L('plot x=0..4\n  n^2').labels.map((l) => l.text);
+  check('auto y range covers the curve', auto.includes('20') && !auto.includes('40'), auto.join('|'));
+  const bad = R('plot\n  n +* 2');
+  check('bad expression warns with the line', bad.errors.length === 1 && bad.errors[0].line === 2, warns(bad));
+  const ext = R('plot\n  bars: 1 2 3\n  points: (1,1) (2,4)\n  vline: 2 n_0\n  hline: 3 c dotted');
+  check('bars, points and reference lines', !ext.errors.length && /stroke-dasharray/.test(ext.svg) && (ext.svg.match(/<rect/g) || []).length >= 3, warns(ext));
+  const v = L('plot x=0..10 ticks=none\n  n\n  vline: 4 n_0');
+  check('vline is labelled', v.labels.some((l) => l.text === 'n_0'));
+  check('ticks=none drops tick labels', !v.labels.some((l) => l.text === '2'), v.labels.map((l) => l.text).join('|'));
+  const xt = L('plot x=0..4 y=0..100\n  n\n  xticks: 1 2:n_0').labels.map((l) => l.text);
+  check('xticks with labels', xt.includes('n_0') && xt.includes('1') && !xt.includes('3'), xt.join('|'));
+  const rng = R('plot x=abc\n  n');
+  check('bad range warns', rng.errors.some((e) => /x=abc/.test(e.msg)), warns(rng));
+}
+
+// seq
+{
+  const s = L('seq\n  C "client"\n  S "server"\n  C -> S "SYN" delay=1\n  S --> C "ACK"\n  C -> C "retry"\n  S * "crash"');
+  check('seq renders cleanly', !s.errors.length, warns(s));
+  const a = s.box.anchors;
+  check('actors in declaration order', a.get('C').cx < a.get('S').cx);
+  check('actor labels drawn', ['client', 'server', 'SYN', 'ACK', 'retry', 'crash'].every((t) => s.labels.some((l) => l.text === t)), s.labels.map((l) => l.text).join('|'));
+  const auto = L('seq\n  A -> B\n  B -> C').box.anchors;
+  check('actors created on first use', auto.has('A') && auto.has('B') && auto.has('C') && auto.get('B').cx < auto.get('C').cx);
+  const flat = L('seq\n  A -> B "m"');
+  const slant = L('seq\n  A -> B "m" delay=1');
+  check('delay slants the arrow (taller diagram)', slant.box.h > flat.box.h, `${slant.box.h} vs ${flat.box.h}`);
+  const right = L('seq dir=right\n  P -> Q\n  Q -> R');
+  check('dir=right: actors stacked vertically', right.box.anchors.get('P').cy < right.box.anchors.get('Q').cy && right.box.anchors.get('Q').cy < right.box.anchors.get('R').cy);
+  check('dir=right: wider than tall for long runs', L('seq dir=right\n  P -> Q\n  Q -> P\n  P -> Q\n  Q -> P').box.w > right.box.w);
+  const both = R('seq\n  A <-> B\n  A <- B\n  A -> B lost red');
+  check('both-way, reversed and lost messages', !both.errors.length, warns(both));
+  const bad = R('seq\n  A -> B wat=1\n  A B C D');
+  check('seq bad lines warn', bad.errors.length === 2, warns(bad));
+  check('seq in a figure has an anchor for links', !R('seq id=S\n  A -> B\narray X\n  1\nlink S.A -> X[1]').errors.length);
+}
+
+// timeline
+{
+  const t = L('timeline\n  a 0..3\n  b 2..5 "x"\n  a 6..8\n  d 9 "due"');
+  check('timeline renders cleanly', !t.errors.length, warns(t));
+  const names = t.labels.filter((l) => ['a', 'b', 'd'].includes(l.text));
+  check('repeated names share a row', names.length === 3, names.map((l) => l.text).join('|'));
+  const ya = names.find((l) => l.text === 'a').y;
+  const yb = names.find((l) => l.text === 'b').y;
+  check('rows go down in order', ya < yb);
+  check('point event labelled', t.labels.some((l) => l.text === 'due'));
+  const g = L('timeline gantt\n  P_1 0..24\n  P_2 24..27\n  P_3 27..30');
+  const ticks = g.labels.map((l) => l.text);
+  check('gantt ticks at every boundary', ['0', '24', '27', '30'].every((v) => ticks.includes(v)) && !ticks.includes('10'), ticks.join('|'));
+  check('gantt names inside the bars', ['P_1', 'P_2', 'P_3'].every((v) => ticks.includes(v)));
+  check('gantt is one row', g.box.h < t.box.h);
+  const rev = R('timeline\n  a 5..2');
+  check('reversed range warns', rev.errors.length === 1 && rev.errors[0].warn && /backwards/.test(rev.errors[0].msg), warns(rev));
+  const cut = R('timeline to=3\n  a 0..5');
+  check('interval past to= warns', cut.errors.some((e) => /outside/.test(e.msg)), warns(cut));
+  const mk = L('timeline\n  a 0..4\n  mark: 2 t');
+  check('mark is labelled', mk.labels.some((l) => l.text === 't') && /stroke-dasharray/.test(mk.svg));
+}
+
+// sets
+{
+  const f = api.compileSetFormula;
+  const ids = ['A', 'B', 'C'];
+  const m = (a, b, c) => ({ A: a, B: b, C: c });
+  check('A-B', f('A-B', ids)(m(1, 0, 0)) && !f('A-B', ids)(m(1, 1, 0)));
+  check('A&B|C precedence', f('A&B|C', ids)(m(0, 0, 1)) && !f('A&B|C', ids)(m(1, 0, 0)));
+  check('complement forms', f("A'", ids)(m(0, 1, 0)) && f('~A', ids)(m(0, 0, 0)) && !f('!A', ids)(m(1, 0, 0)));
+  check('TeX operators', f('A \\cap (B \\cup C)', ids)(m(1, 0, 1)) && !f('A \\setminus B', ids)(m(1, 1, 0)));
+  check('U is everything', f('U-A', ids)(m(0, 1, 0)) && !f('U-A', ids)(m(1, 0, 0)));
+  let threw = false;
+  try { f('A&D', ids); } catch (e) { threw = /no set called "D"/.test(e.message); }
+  check('unknown set in formula throws', threw);
+
+  const v2 = L('sets\n  A\n  B');
+  const A = v2.box.anchors.get('A');
+  const B = v2.box.anchors.get('B');
+  check('two-set venn: side by side, overlapping', near(A.cy, B.cy) && A.cx < B.cx && B.cx - A.cx < A.hw + B.hw);
+  const v3 = L('sets\n  A\n  B\n  C').box.anchors;
+  check('three-set venn: C below', v3.get('C').cy > v3.get('A').cy && near(v3.get('A').cy, v3.get('B').cy));
+  const sh = R('sets universe\n  A\n  B\n  shade: A-B');
+  check('shading uses a clip path and a mask', /<clipPath/.test(sh.svg) && /<mask/.test(sh.svg) && /<defs>/.test(sh.svg), sh.svg.slice(0, 200));
+  const two = R('figure cols=2\npanel\nsets\n  A\n  B\n  shade: A&B\npanel\nsets\n  A\n  B\n  shade: A&B');
+  const idsUsed = [...two.svg.matchAll(/<clipPath id="([^"]+)"/g)].map((x) => x[1]);
+  check('clip ids are unique across blocks', idsUsed.length >= 4 && new Set(idsUsed).size === idsUsed.length, idsUsed.join(' '));
+  const el = L('sets\n  A\n  B\n  C\n  in: A&B&C x\n  in: A-B-C y');
+  const ins = (q, p) => ((p.x - q.cx) / q.hw) ** 2 + ((p.y - q.cy) / q.hh) ** 2 < 1;
+  const an = el.box.anchors;
+  const x = el.labels.find((l) => l.text === 'x');
+  const y = el.labels.find((l) => l.text === 'y');
+  check('in: puts x inside A, B and C', x && ins(an.get('A'), x) && ins(an.get('B'), x) && ins(an.get('C'), x));
+  check('in: puts y in A only', y && ins(an.get('A'), y) && !ins(an.get('B'), y) && !ins(an.get('C'), y));
+  const empty = R('sets nested\n  A\n  B\n  in: B-A z');
+  check('empty region warns', empty.errors.some((e) => /empty/.test(e.msg)), warns(empty));
+  const unk = R('sets\n  A\n  shade: A&Q');
+  check('unknown set warns', unk.errors.some((e) => /no set called "Q"/.test(e.msg)), warns(unk));
+  const nest = L('sets nested\n  EXP\n  PSPACE\n  NP\n  P').box.anchors;
+  const inside = (o, i) => i.cx - i.hw >= o.cx - o.hw && i.cx + i.hw <= o.cx + o.hw && i.cy - i.hh >= o.cy - o.hh && i.cy + i.hh <= o.cy + o.hh;
+  check('nested sets contain each other', inside(nest.get('EXP'), nest.get('PSPACE')) && inside(nest.get('PSPACE'), nest.get('NP')) && inside(nest.get('NP'), nest.get('P')));
+  const man = L('sets layout=manual\n  NP (-0.6,0) rx=1.4 ry=1\n  coNP (0.6,0) rx=1.4 ry=1');
+  const np = man.labels.find((l) => l.text === 'NP');
+  check('manual: overlapping set label moves into its own part', np && !ins(man.box.anchors.get('coNP'), np), JSON.stringify(np));
+  const many = R('sets\n  A\n  B\n  C\n  D');
+  check('more than three venn sets warns', many.errors.some((e) => /1–3 sets/.test(e.msg)), warns(many));
+  const nopos = R('sets layout=manual\n  A');
+  check('manual set without a position warns', nopos.errors.some((e) => /no \(x,y\)/.test(e.msg)), warns(nopos));
+}
+
+{
+  const more = R(require('fs').readFileSync(require('path').join(__dirname, '..', 'docs', 'more.fig'), 'utf8'));
+  check('1.1 showcase renders cleanly', !more.errors.length, more.errors.map((e) => `${e.line}: ${e.msg}`).join('; '));
+}
+
 // every example in the syntax reference renders cleanly, and both languages are filled in
 for (const sec of api.help) {
   check(`help ${sec.id} has both languages`, sec.title.en && sec.title.zh && sec.items.every((it) => (it.p ? it.p.en && it.p.zh : it.ref ? it.ref.every(([, d]) => d.en && d.zh) : it.note ? it.note.en && it.note.zh : true)));

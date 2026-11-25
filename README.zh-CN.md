@@ -15,7 +15,7 @@
 - **新建**：命令「Figure Suite: New figure」、左侧栏的形状图标，或编辑器右键「Insert figure…」。
 - 新建时面板是空的（占位文字提示从模板开始）；上次没插入就关掉的内容会作为草稿恢复，标题显示「(draft restored)」。
 - 面板左边写源码，右边实时预览；问题在下方列出（红色 = 错误，橙色 = 警告：拼错的选项/指令、越界的下标等，图照常画），点一下跳到该行。
-- 工具栏：模板（模糊搜索，40 个，覆盖下面所有类型；回车替换当前源码，可 Cmd/Ctrl+Z 撤销，Shift+回车追加为新块）、清空、语法速查、缩放（Ctrl/Cmd+滚轮也可以）、适应窗口。
+- 工具栏：模板（模糊搜索，41 个，覆盖下面所有类型；回车替换当前源码，可 Cmd/Ctrl+Z 撤销，Shift+回车追加为新块）、清空、语法速查、缩放（Ctrl/Cmd+滚轮也可以）、适应窗口。
 - **语法速查**：分章节的完整参考，顶部可以按章节跳转、按关键词搜索；每个示例都有「插入」按钮，点一下追加到源码末尾。默认跟随 Obsidian 的界面语言（中文 / English），右上角可以切换，设置里也可以固定。
 - **拖动图（graph）的结点**：坐标自动写回源码（吸附 0.1，按住 Alt 不吸附），整次拖动只算一步撤销。
 - 底部：文件名、格式（PNG/SVG）、PNG 倍率；`Copy PNG`、`Copy SVG`、`Save file`（只存附件并复制嵌入链接）、`Insert`（存到附件目录，在光标处单独一行插入 `![[x.png|宽度]]`）。没有打开的笔记编辑器时（例如阅读视图），主按钮变成 `Save & copy link`。`Cmd/Ctrl+Enter` = 主按钮。
@@ -136,6 +136,14 @@ graph layout=auto|manual|layered|force|circle|line|grid dir=right|up|left unit=6
 - `line`：结点按声明顺序排成一行，相邻的边是直线，跨过结点的边自动成弧线（向右的在上方、向左的在下方；边上写 `above` / `below` 指定，`straight` 强制直线）。适合拓扑排序、斐波那契之类的 DP 状态链。
 - 直线边如果穿过其它结点会自动弯开；同一对结点的多条边自动错开。
 - 结点形状：`circle box ellipse point none double`；`start` 画初始箭头（自动机）。
+- **Hasse 图**：`graph hasse`，用 `a < b < c` 写序关系（a 在 b 下方，也可以写 `>`）。自下而上分层、不画箭头、默认纯文字结点；能由传递性推出的边自动省略，所以可以直接写出完整的序关系；有环时给出警告。
+
+```
+graph hasse
+  1 < 2 < 4 < 12
+  1 < 3 < 6 < 12
+  2 < 6
+```
 
 ### list / chains
 
@@ -232,7 +240,7 @@ figure-suite/
 │   ├── seq.js / timeline.js / sets.js
 │   ├── compose.js         ← 面板组合
 │   ├── edit.js            ← 拖动结点后改写源码
-│   ├── templates.js       ← 40 个模板
+│   ├── templates.js       ← 41 个模板
 │   ├── help.js            ← 语法速查（中英双语数据）
 │   ├── export.js          ← PNG 光栅化、PNG iTXt / SVG metadata 存源码、剪贴板
 │   ├── panel.js           ← 弹出面板

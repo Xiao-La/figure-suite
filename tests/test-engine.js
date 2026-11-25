@@ -384,6 +384,43 @@ const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
   check('1.1 showcase renders cleanly', !more.errors.length, more.errors.map((e) => `${e.line}: ${e.msg}`).join('; '));
 }
 
+// Hasse diagrams and symmetric layered layouts (1.1.1)
+{
+  const A = (src) => L(src).box.anchors;
+  const m3 = A('graph hasse\n  0 < x < 1\n  0 < y < 1\n  0 < z < 1');
+  check('hasse: bottom-up by default', m3.get('0').cy > m3.get('x').cy && m3.get('x').cy > m3.get('1').cy);
+  check('hasse: M3 is a symmetric diamond', near(m3.get('0').cx, m3.get('1').cx, 0.01) && near(m3.get('y').cx, m3.get('0').cx, 0.01) && near(m3.get('x').cx + m3.get('z').cx, 2 * m3.get('y').cx, 0.01),
+    ['0', 'x', 'y', 'z', '1'].map((k) => m3.get(k).cx.toFixed(1)).join(' '));
+  const n5 = A('graph hasse\n  0 < a < b < 1\n  0 < c < 1');
+  check('hasse: N5 has 0 under 1', Math.abs(n5.get('0').cx - n5.get('1').cx) < 12, `${n5.get('0').cx} ${n5.get('1').cx}`);
+  const chainSym = A('graph hasse\n  p1 < p2 < p3 < p5\n  p2 < p4 < p5');
+  check('hasse: lone chain nodes centred', near(chainSym.get('p1').cx, chainSym.get('p5').cx, 0.01) && near(chainSym.get('p2').cx, chainSym.get('p5').cx, 0.01));
+  const ng = A('graph hasse\n  a < b < c < d\n  a < e < d\n  f < d');
+  check('hasse: a minimal element sits just under its cover', near(ng.get('f').cy, ng.get('c').cy, 0.01), `${ng.get('f').cy} vs ${ng.get('c').cy}`);
+  const full = R('graph hasse\n  1 < 2 < 4\n  1 < 4\n  1 < 3');
+  const covers = R('graph hasse\n  1 < 2 < 4\n  1 < 3');
+  check('hasse: transitive edges are left out', full.svg === covers.svg && !full.errors.length, warns(full));
+  const arrows = R('graph hasse\n  1 -> 2 -> 4\n  1 -> 3');
+  check('hasse: -> draws plain lines', arrows.svg === covers.svg);
+  const gt = R('graph hasse\n  1\n  2\n  4\n  3\n  2 > 1\n  4 > 2\n  3 > 1');
+  check('hasse: > is the same order reversed', gt.svg === R('graph hasse\n  1\n  2\n  4\n  3\n  1 < 2 < 4\n  1 < 3').svg);
+  const dup = R('graph hasse\n  1 < 2\n  1 < 2\n  1 -- 2');
+  check('hasse: repeated pairs drawn once', dup.svg === R('graph hasse\n  1 < 2').svg);
+  const cyc = R('graph hasse\n  a < b < c < a');
+  check('hasse: a cycle warns', cyc.errors.some((e) => /cycle/.test(e.msg) && e.warn), warns(cyc));
+  const self = R('graph hasse\n  a < a\n  a < b');
+  check('hasse: a ≤ a warns', self.errors.some((e) => /always true/.test(e.msg)), warns(self));
+  check('hasse: labels without circles by default', !/<circle/.test(covers.svg));
+  check('hasse: shape= still works', /<circle/.test(R('graph hasse shape=point\n  a < b').svg));
+  const plain = R('graph\n  a < b');
+  check('< in a plain graph draws no arrow head', plain.svg === R('graph\n  a -- b').svg);
+  const pow = A('graph hasse\n  e < a < ab < abc\n  e < b < bc < abc\n  e < c < ac < abc\n  a < ac\n  b < ab\n  c < bc');
+  check('hasse: Boolean lattice symmetric', near(pow.get('e').cx, pow.get('abc').cx, 0.01) && near(pow.get('b').cx, pow.get('e').cx, 0.5),
+    ['e', 'a', 'b', 'c', 'abc'].map((k) => pow.get(k).cx.toFixed(1)).join(' '));
+  const sym = A('graph layout=layered\n  r -> a\n  r -> b\n  a -> c\n  b -> c');
+  check('layered: diamond DAG is symmetric', near(sym.get('r').cx, sym.get('c').cx, 0.01) && near(sym.get('a').cx + sym.get('b').cx, 2 * sym.get('r').cx, 0.01));
+}
+
 // every example in the syntax reference renders cleanly, and both languages are filled in
 for (const sec of api.help) {
   check(`help ${sec.id} has both languages`, sec.title.en && sec.title.zh && sec.items.every((it) => (it.p ? it.p.en && it.p.zh : it.ref ? it.ref.every(([, d]) => d.en && d.zh) : it.note ? it.note.en && it.note.zh : true)));

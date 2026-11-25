@@ -1,7 +1,7 @@
 {
   "id": "figure-suite",
   "name": "Figure Suite",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "1.5.7",
   "description": "Draw figures for algorithms, data structures and theoretical computer science (arrays, trees, graphs, automata, linked lists, plots, Venn diagrams, sequence diagrams) from short text, and insert them into notes as editable PNG or SVG.",
   "author": "xiao-la",

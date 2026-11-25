@@ -13,7 +13,7 @@ array tape index=none
   shade: 4 lightblue
   ptr: q_3=4
 panel (c) Hasse diagram of $2^{\{a,b,c\}}$
-graph layout=layered dir=up shape=none spread=0.7
+graph hasse spread=0.7
   e "\emptyset"
   a "\{a\}"
   b "\{b\}"
@@ -22,18 +22,12 @@ graph layout=layered dir=up shape=none spread=0.7
   ac "\{a,c\}"
   bc "\{b,c\}"
   abc "\{a,b,c\}"
-  e -- a
-  e -- b
-  e -- c
-  a -- ab
-  a -- ac
-  b -- ab
-  b -- bc
-  c -- ac
-  c -- bc
-  ab -- abc
-  ac -- abc
-  bc -- abc
+  e < a < ab < abc
+  e < b < bc < abc
+  e < c < ac < abc
+  a < ac
+  b < ab
+  c < bc
 panel (d) parse tree of $a + b \times c$
 tree shape=none
   E

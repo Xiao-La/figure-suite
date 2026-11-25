@@ -19,7 +19,7 @@ Draw figures for algorithms, data structures and theoretical computer science fr
 - **Export** to a PNG at 1–4× resolution or an SVG, to the clipboard, or straight into the note. Inserted links carry the 1× width, so high-resolution images keep their size.
 - **Re-editable.** Hover over a figure in a note and click the pencil icon to reopen it. **Update** overwrites the file in place and keeps the links working.
 - **Helpful editor.**
-  - 40 starter templates and a searchable built-in syntax reference (English and 中文) whose examples you can insert with one click.
+  - 41 starter templates and a searchable built-in syntax reference (English and 中文) whose examples you can insert with one click.
   - Errors and warnings point at the line, including typos, out-of-range indices and unknown commands.
 
 ## Getting started
@@ -88,7 +88,8 @@ array A
   - `level:` adds a note to a whole level.
 - **graph**: edges are written `a -> b 10`, `a -- b` or `a <-> b`.
   - Declare a node to set its label, position (`(x,y)`), shape or colour.
-  - `layout=auto|layered|force|circle|grid|line|manual`; `dir=up` draws a layered layout bottom-up (Hasse diagrams).
+  - `layout=auto|layered|force|circle|grid|line|manual`; `dir=down|up|right|left` for layered layouts.
+  - `graph hasse` with `a < b < c` draws a Hasse diagram: bottom-up, plain lines, and pairs implied by transitivity are left out, so you can write the whole order.
   - `group:`, `rank:` and `shade:` work on nodes; `bend=`, `loop=` and `swap` shape edges.
 - **list / chains**: `list L.head double` with the keys in the body; `chains T` with a line like `1: k1 k4` for each slot.
 - **plot**: one expression per line, `n \lg n`, `2^n`, `\frac{n}{2}` (label and style after it: `n^2 "quadratic" dashed`); `x=1..8 y=0..64 xlabel=n`; `vline: 4 n_0`, `bars: 1 2 1 4`, `points: (1,2)`.

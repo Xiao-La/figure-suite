@@ -7,7 +7,7 @@
  * selected layout; dragging a node in the preview writes `at=(x,y)` back.
  */
 
-const EDGE_OPS = ['<->', '->', '<-', '--'];
+const EDGE_OPS = ['<->', '->', '<-', '--', '<', '>'];
 const NODE_SHAPES = ['circle', 'box', 'point', 'none', 'ellipse', 'double'];
 
 function parseGraph(block, errors) {
@@ -62,7 +62,7 @@ function parseGraph(block, errors) {
         let a = getNode(chain[k], entry.line).id;
         let b = getNode(chain[k + 1], entry.line).id;
         const op = ops[k];
-        if (op === '<-') [a, b] = [b, a];
+        if (op === '<-' || op === '>') [a, b] = [b, a];
         edges.push({ from: a, to: b, op, label: k === ops.length - 1 || ops.length === 1 ? label : '', opts: args.opts, flags, line: entry.line });
       }
       continue;
@@ -185,7 +185,7 @@ function forceLayout(ids, edges) {
   return out;
 }
 
-function layeredLayout(ids, edges, rankGroups, dir) {
+function layeredLayout(ids, edges, rankGroups, dir, hasse = false) {
   const index = new Map(ids.map((id, k) => [id, k]));
   const n = ids.length;
   const succ = ids.map(() => []);
@@ -226,20 +226,51 @@ function layeredLayout(ids, edges, rankGroups, dir) {
       if (--indeg[v] === 0) queue.push(v);
     }
   }
+  if (hasse) {
+    // minimal elements sit just below their lowest cover instead of all on the
+    // bottom row, so long cover edges stay short
+    const indeg2 = new Array(n).fill(0);
+    dag.forEach(([, b]) => indeg2[b]++);
+    for (let u = 0; u < n; u++) if (!indeg2[u] && succ[u].length) rank[u] = Math.min(...succ[u].map((v) => rank[v])) - 1;
+  }
   for (const group of rankGroups) {
     const ks = group.map((id) => index.get(id)).filter((k) => k !== undefined);
     const r = Math.max(...ks.map((k) => rank[k]));
     ks.forEach((k) => { rank[k] = r; });
   }
+  // long edges get a placeholder on every layer they cross, so they take part in
+  // ordering and keep a lane free (nodes n.. are placeholders)
+  const segs = [];
+  let total = n;
+  for (const [a0, b0] of dag) {
+    const [a, b] = rank[a0] <= rank[b0] ? [a0, b0] : [b0, a0];
+    let prev = a;
+    for (let r = rank[a] + 1; r < rank[b]; r++) { const d = total++; rank[d] = r; segs.push([prev, d]); prev = d; }
+    segs.push([prev, b]);
+  }
+  const dummy = (u) => u >= n;
   const layers = [];
-  for (let u = 0; u < n; u++) (layers[rank[u]] = layers[rank[u]] || []).push(u);
+  for (let u = 0; u < total; u++) (layers[rank[u]] = layers[rank[u]] || []).push(u);
   for (let r = 0; r < layers.length; r++) if (!layers[r]) layers[r] = [];
-  const nb = ids.map(() => []);
-  dag.forEach(([a, b]) => { nb[a].push(b); nb[b].push(a); });
-  const posIn = new Array(n).fill(0);
+  const nb = Array.from({ length: total }, () => []);
+  segs.forEach(([a, b]) => { nb[a].push(b); nb[b].push(a); });
+  const posIn = new Array(total).fill(0);
   const refresh = () => layers.forEach((L) => L.forEach((u, k) => { posIn[u] = k; }));
   refresh();
-  for (let sweep = 0; sweep < 12; sweep++) {
+  const crossings = () => {
+    let c = 0;
+    const span = segs.filter(([a, b]) => rank[b] === rank[a] + 1);
+    for (let i = 0; i < span.length; i++) for (let j = i + 1; j < span.length; j++) {
+      const [a, b] = span[i];
+      const [c2, d] = span[j];
+      if (rank[a] !== rank[c2]) continue;
+      if ((posIn[a] - posIn[c2]) * (posIn[b] - posIn[d]) < 0) c++;
+    }
+    return c;
+  };
+  let best = layers.map((L) => L.slice());
+  let bestC = crossings();
+  for (let sweep = 0; sweep < 12 && bestC > 0; sweep++) {
     const down = sweep % 2 === 0;
     const seq = down ? layers.map((_, r) => r) : layers.map((_, r) => layers.length - 1 - r);
     for (const r of seq) {
@@ -253,26 +284,54 @@ function layeredLayout(ids, edges, rankGroups, dir) {
       layers[r].sort((a, b) => bc.get(a) - bc.get(b) || posIn[a] - posIn[b]);
       refresh();
     }
+    const c = crossings();
+    if (c < bestC) { bestC = c; best = layers.map((L) => L.slice()); }
   }
-  // x coordinates: start packed, then pull toward neighbour barycentres
-  const X = new Array(n).fill(0);
-  layers.forEach((L) => L.forEach((u, k) => { X[u] = k - (L.length - 1) / 2; }));
-  for (let it = 0; it < 20; it++) {
+  best.forEach((L, r) => { layers[r] = L; });
+  refresh();
+  // x coordinates: every node pulled to the mean of its neighbours, each layer kept
+  // in order at least 1 apart. The per-layer step is an exact least-squares fit
+  // (pool adjacent violators), so nothing drifts to one side: symmetric orders
+  // come out symmetric.
+  const fitLayer = (want, offs) => {
+    const blocks = [];
+    want.forEach((w, k) => {
+      blocks.push({ sum: w - offs[k], cnt: 1 });
+      while (blocks.length > 1 && blocks[blocks.length - 2].sum / blocks[blocks.length - 2].cnt > blocks[blocks.length - 1].sum / blocks[blocks.length - 1].cnt) {
+        const b = blocks.pop();
+        blocks[blocks.length - 1].sum += b.sum;
+        blocks[blocks.length - 1].cnt += b.cnt;
+      }
+    });
+    const out = [];
+    for (const b of blocks) for (let j = 0; j < b.cnt; j++) out.push(b.sum / b.cnt + offs[out.length]);
+    return out;
+  };
+  // placeholders need only half the room of a node
+  const offsOf = (L) => { const o = [0]; for (let k = 1; k < L.length; k++) o.push(o[k - 1] + (dummy(L[k]) || dummy(L[k - 1]) ? (hasse ? 1 : 0.5) : 1)); return o; };
+  let X = new Array(total).fill(0);
+  layers.forEach((L) => { const o = offsOf(L); L.forEach((u, k) => { X[u] = o[k] - o[o.length - 1] / 2; }); });
+  for (let it = 0; it < 80; it++) {
+    // segments of long edges weigh more, so long edges come out straight
+    const wt = (u, v) => (dummy(u) || dummy(v) ? 1.5 : 1);
+    const want = X.map((x, u) => {
+      if (!nb[u].length) return x;
+      let sw = 0;
+      let sx = 0;
+      for (const v of nb[u]) { const w = wt(u, v); sw += w; sx += w * X[v]; }
+      return sx / sw;
+    });
+    const next = X.slice();
     for (const L of layers) {
-      const want = L.map((u) => {
-        const ns = nb[u];
-        return ns.length ? ns.reduce((s, v) => s + X[v], 0) / ns.length : X[u];
-      });
-      // keep order with min gap 1: forward then backward pass around desired
-      const x = want.slice();
-      for (let k = 1; k < L.length; k++) x[k] = Math.max(x[k], x[k - 1] + 1);
-      for (let k = L.length - 2; k >= 0; k--) x[k] = Math.min(x[k], x[k + 1] - 1);
-      for (let k = 1; k < L.length; k++) x[k] = Math.max(x[k], x[k - 1] + 1);
-      L.forEach((u, k) => { X[u] = X[u] * 0.5 + x[k] * 0.5; });
-      // final separation guarantee
-      for (let k = 1; k < L.length; k++) if (X[L[k]] < X[L[k - 1]] + 1) X[L[k]] = X[L[k - 1]] + 1;
+      if (!L.length) continue;
+      const fit = fitLayer(L.map((u) => want[u]), offsOf(L));
+      L.forEach((u, k) => { next[u] = 0.5 * X[u] + 0.5 * fit[k]; });
     }
+    X = next;
   }
+  const lo = Math.min(...X.slice(0, n));
+  const hi = Math.max(...X.slice(0, n));
+  X = X.map((x) => x - (lo + hi) / 2);
   const out = new Map();
   const gapX = 1.25;
   const gapY = 1.3;
@@ -281,6 +340,48 @@ function layeredLayout(ids, edges, rankGroups, dir) {
     out.set(id, dir === 'right' ? [r * 1.15, -X[u] * gapX] : dir === 'left' ? [-r * 1.15, -X[u] * gapX] : dir === 'up' ? [X[u] * gapX, r] : [X[u] * gapX, -r]);
   });
   return out;
+}
+
+/**
+ * `graph hasse`: the edges are an order relation (a -- b, a < b or a -> b: a is
+ * below b). Keep only the covering pairs; warn about cycles, which no partial
+ * order has.
+ */
+function hasseReduce(g, block, errors) {
+  const ids = g.order;
+  const index = new Map(ids.map((id, k) => [id, k]));
+  const n = ids.length;
+  const up = ids.map(() => new Set());
+  for (const e of g.edges) if (e.from !== e.to) up[index.get(e.from)].add(index.get(e.to));
+  // reachability by DFS from every node (posets in figures are small)
+  const reach = ids.map(() => new Set());
+  for (let s = 0; s < n; s++) {
+    const stack = [...up[s]];
+    while (stack.length) {
+      const v = stack.pop();
+      if (reach[s].has(v)) continue;
+      reach[s].add(v);
+      stack.push(...up[v]);
+    }
+  }
+  const cyc = ids.filter((id, k) => reach[k].has(k));
+  if (cyc.length) errors.push({ line: block.line, msg: `hasse: ${cyc.join(', ')} lie on a cycle, so this is not a partial order`, warn: true });
+  const seen = new Set();
+  g.edges = g.edges.filter((e) => {
+    if (e.from === e.to) {
+      errors.push({ line: e.line, msg: `hasse: ${e.from} ≤ ${e.from} is always true and is not drawn`, warn: true });
+      return false;
+    }
+    const a = index.get(e.from);
+    const b = index.get(e.to);
+    const key = `${a},${b}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    if (cyc.length && reach[b].has(a)) return true; // inside a cycle: keep what was written
+    // implied when some other element lies strictly between a and b
+    for (const c of up[a]) if (c !== b && (reach[c].has(b))) return false;
+    return true;
+  });
 }
 
 /* ---------------- geometry helpers ---------------- */
@@ -322,7 +423,9 @@ function layoutGraph(block, ctx, errors) {
   const size = ctx.size;
   const o = block.opts;
   const g = parseGraph(block, errors);
-  const directed = truthy(o.directed) || (!truthy(o.undirected) && g.edges.some((e) => e.op !== '--'));
+  const hasse = truthy(o.hasse);
+  if (hasse) hasseReduce(g, block, errors);
+  const directed = !hasse && (truthy(o.directed) || (!truthy(o.undirected) && g.edges.some((e) => !['--', '<', '>'].includes(e.op))));
   const unit = num(o.unit, 0) || size * 4;
   const rec = new Rec();
   const ids = g.order;
@@ -343,7 +446,7 @@ function layoutGraph(block, ctx, errors) {
       else nd.opts.fill = color;
     }
   }
-  let layout = (o.layout || 'auto').toLowerCase();
+  let layout = (o.layout || (hasse ? 'layered' : 'auto')).toLowerCase();
   const allPlaced = ids.every((id) => g.nodes.get(id).pos);
   if (layout === 'auto') layout = allPlaced ? 'manual' : directed ? 'layered' : 'force';
   let auto;
@@ -351,7 +454,7 @@ function layoutGraph(block, ctx, errors) {
   else if (layout === 'circle') auto = circleLayout(ids);
   else if (layout === 'grid') auto = gridLayout(ids, num(o.cols, 0));
   else if (layout === 'line' || layout === 'row') auto = lineLayout(ids);
-  else if (layout === 'layered' || layout === 'tree' || layout === 'dag') auto = layeredLayout(ids, g.edges, rankGroups, ['right', 'left', 'up'].includes(o.dir) ? o.dir : 'down');
+  else if (layout === 'layered' || layout === 'tree' || layout === 'dag') auto = layeredLayout(ids, g.edges, rankGroups, ['right', 'left', 'up', 'down'].includes(o.dir) ? o.dir : hasse ? 'up' : 'down', hasse);
   else if (layout === 'force' || layout === 'spring') auto = forceLayout(ids, g.edges);
   else if (layout !== 'manual') auto = forceLayout(ids, g.edges); // unknown name: already warned by the header check
   const scale = num(o.spread, 1);
@@ -376,7 +479,7 @@ function layoutGraph(block, ctx, errors) {
   const fitR = (k, dbl) => Math.hypot(labels[k].w / 2, labels[k].h / 2) + size * 0.22 + (dbl ? 3 : 0);
   const R = num(o.r, 0) || Math.max(size * 0.95, ...ids.map((id, k) => {
     const nd = g.nodes.get(id);
-    const shape = NODE_SHAPES.find((s) => nd.flags.has(s)) || o.shape || 'circle';
+    const shape = NODE_SHAPES.find((s) => nd.flags.has(s)) || o.shape || (hasse ? 'none' : 'circle');
     if (labels[k].w > size * CIRCLE_MAX_W) return 0;
     return shape === 'circle' || shape === 'double' ? fitR(k, shape === 'double' || nd.flags.has('double')) : 0;
   }));
@@ -387,7 +490,7 @@ function layoutGraph(block, ctx, errors) {
   const N = new Map();
   ids.forEach((id, k) => {
     const nd = g.nodes.get(id);
-    let shape = NODE_SHAPES.find((s) => nd.flags.has(s)) || o.shape || 'circle';
+    let shape = NODE_SHAPES.find((s) => nd.flags.has(s)) || o.shape || (hasse ? 'none' : 'circle');
     const double = shape === 'double' || nd.flags.has('double');
     if (shape === 'double') shape = 'circle';
     // a node marked `circle` explicitly stays a circle (own radius) however long its label
@@ -479,8 +582,8 @@ function layoutGraph(block, ctx, errors) {
       width: num(e.opts.width, 0) * lw || (thick ? lw * 2.6 : lw),
       color: strokeOf(e.opts.color || colorWord),
       dash: e.flags.has('dashed') ? '5 3' : e.flags.has('dotted') ? '1.5 2.5' : null,
-      end: e.flags.has('noarrow') ? false : e.op === '->' || e.op === '<-' || e.op === '<->' || (e.flags.has('arrow')),
-      start: e.op === '<->',
+      end: e.flags.has('noarrow') ? false : (!hasse && (e.op === '->' || e.op === '<-' || e.op === '<->')) || e.flags.has('arrow'),
+      start: !hasse && e.op === '<->',
     };
     const lsize = size * 0.9;
     if (e.from === e.to) {

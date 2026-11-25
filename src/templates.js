@@ -441,6 +441,19 @@ table index
   1 1 0 1 0`,
   },
   {
+    group: 'Graphs',
+    name: 'Hasse diagram (lattice)',
+    source: `graph hasse shape=point
+  0 below=0
+  x left=x
+  y right=y
+  z right=z
+  1 above=1
+  0 < x < 1
+  0 < y < 1
+  0 < z < 1`,
+  },
+  {
     group: 'Linked structures',
     name: 'Pointers between blocks (page table)',
     source: `figure cols=2 gap=60
